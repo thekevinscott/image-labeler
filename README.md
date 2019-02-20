@@ -26,9 +26,18 @@ import ImageLabeler from 'image-labeler';
 
 ## API
 
+## Tests
+
+## Versioning
 
 ## Contributing
+
+
 
 ## Author
 
 ## License
+
+## Acknowledgments
+
+This package leverages `tensorflow.js` and MobileNet, both released by Google.
