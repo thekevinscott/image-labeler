@@ -19,7 +19,7 @@ A demo is forthcoming.
 
 ## Getting Started
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 ### Via script tag
 
@@ -69,7 +69,7 @@ Many image src are not loadable via CORS. Theres ways around this.
 
 ## API
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 `constructor`
 
@@ -85,11 +85,11 @@ a gif about how filters work
 
 ## Tests
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 ## Versioning
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/thekevinscott/image-labeler/tags). 
 
@@ -99,7 +99,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Author
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 [Kevin Scott](https://thekevinscott.com)
 
@@ -107,12 +107,12 @@ See also the list of [contributors](https://github.com/thekevinscott/image-label
 
 ## License
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
-<small><a href="#table-of-contents">Back to Top</a></small>
+<a href="#table-of-contents">Back to Top</a>
 
 This package leverages [`tensorflow.js`](https://js.tensorflow.org) and [MobileNet](https://arxiv.org/abs/1704.04861), both released by Google.
