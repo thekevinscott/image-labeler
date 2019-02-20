@@ -53,11 +53,6 @@ class ImageLabeler {
 
     this.loadingModel = true;
     this.model = await tf.loadModel(MODEL_URL);
-    // const layer = model.getLayer('conv_pw_13_relu');
-    // this.model = tf.model({
-    //   inputs: model.inputs,
-    //   outputs: layer.output,
-    // });
     this.loadingModel = false;
 
     while (this.callbacks.length) {

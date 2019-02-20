@@ -6,6 +6,7 @@
   "umd:main": "dist/index.umd.min.js",
   "module": "dist/index.mjs",
   "scripts": {
+    "test": "jest --watch",
     "build": "rimraf dist && microbundle --name ImageLabeler",
     "dev": "rimraf dist && microbundle watch --name ImageLabeler"
   },
@@ -20,8 +21,12 @@
   },
   "homepage": "https://github.com/thekevinscott/image-labeler#readme",
   "devDependencies": {
+    "@types/jest": "^24.0.6",
+    "@types/node": "^11.9.4",
+    "jest": "^24.1.0",
     "microbundle": "^0.9.0",
-    "rimraf": "^2.6.3"
+    "rimraf": "^2.6.3",
+    "ts-jest": "^24.0.0"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^0.15.2"
