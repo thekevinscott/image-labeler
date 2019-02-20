@@ -60,7 +60,6 @@ imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
   console.log(suggestions);
   // ['one', 'two', 'three'];
 });
-// ['one,];
 ```
 
 ### CORS
