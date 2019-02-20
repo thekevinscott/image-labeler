@@ -38,6 +38,8 @@ import ImageLabeler from 'image-labeler';
 
 ## License
 
+This project is licensed under the MIT License - see the LICENSE.md file for details
+
 ## Acknowledgments
 
 This package leverages `tensorflow.js` and MobileNet, both released by Google.
