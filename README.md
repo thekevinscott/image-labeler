@@ -36,6 +36,10 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Author
 
+[Kevin Scott](https://thekevinscott.com)
+
+See also the list of [contributors](https://github.com/thekevinscott/image-labeler/contributors) who participated in this project.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
