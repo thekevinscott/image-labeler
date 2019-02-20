@@ -52,7 +52,7 @@ Many image src are not loadable via CORS. Theres ways around this.
 
 `label` label the image .accepts string html image or video and either a callback or options or both .
 
-options can include the number of labels to return (0 is all), and how many filters to utilize.
+options can include the number of labels to return (0 is all), and how many filters to utilize. also includeConfidence
 
 ### Filters
 
