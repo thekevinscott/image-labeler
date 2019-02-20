@@ -1,20 +1,34 @@
 # Image Labeler
 
-image-labeler provides autosuggested labels for images or video. It relies on a Neural Network, MobileNet, performing inference in the browser to calculate the suggestions.
+`image-labeler` provides autosuggested labels for images or video. It relies on a Neural Network, MobileNet, performing inference in the browser to calculate the suggestions.
 
-## demo
+## Demo
+A demo is forthcoming.
 
-
-## getting started
+## Getting Started
 
 ### Install
 
-npm
+```
+// npm
 npm install image-labeler
 
-yarn
-yqrn add image-labeler
+// yarn
+yarn add image-labeler
+```
 
-### quick start
+### Quick Start
+
+```
+import ImageLabeler from 'image-labeler';
+
+```
 
 ## API
+
+
+## Contributing
+
+## Author
+
+## License
