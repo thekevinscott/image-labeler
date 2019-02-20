@@ -9,7 +9,18 @@ A demo is forthcoming.
 
 ## Getting Started
 
-### Install
+### Via script tag
+
+You can use `image-labeler` via a `<script />` tag:
+
+```
+<script src="tensorflow"></script>
+<script src="image-labeler"></script>
+```
+
+### Via ES6
+
+Install with:
 
 ```
 // npm
@@ -19,14 +30,33 @@ npm install image-labeler
 yarn add image-labeler
 ```
 
-### Quick Start
-
 ```
 import ImageLabeler from 'image-labeler';
-
+const imageLabeler = new ImageLabeler();
+imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
+// also accepts a callback
+console.log(suggestions);
+});
+// ['one,];
 ```
 
+### CORS
+
+Many image src are not loadable via CORS. Theres ways around this.
+
 ## API
+
+`constructor`
+
+`configure` same options as xonstructor
+
+`label` label the image .accepts string html image or video and either a callback or options or both .
+
+options can include the number of labels to return (0 is all), and how many filters to utilize.
+
+### Filters
+
+a gif about how filters work
 
 ## Tests
 
