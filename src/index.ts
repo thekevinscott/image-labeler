@@ -2,20 +2,17 @@ import * as tf from '@tensorflow/tfjs';
 import {
   MODEL_URL,
 } from './config';
-
-interface IOptions {
-  labels?: number;
-  filters?: number;
-  includeConfidence?: boolean;
-}
-
-type ICallbackOrOptions = () => void | IOptions;
-
-const URL = '';
+import parseImages from './parseImages';
+import predict from './predict';
+import {
+  IOptions,
+  ICallbackOrOptions,
+  IImage,
+} from './types';
 
 class ImageLabeler {
   loadingModel: boolean = false;
-  model: any;
+  model: tf.Model;
 
   labels: number = 5;
   filters: number = 2;
@@ -56,6 +53,11 @@ class ImageLabeler {
 
     this.loadingModel = true;
     this.model = await tf.loadModel(MODEL_URL);
+    // const layer = model.getLayer('conv_pw_13_relu');
+    // this.model = tf.model({
+    //   inputs: model.inputs,
+    //   outputs: layer.output,
+    // });
     this.loadingModel = false;
 
     while (this.callbacks.length) {
@@ -73,7 +75,8 @@ class ImageLabeler {
     return this.model;
   }
 
-  label = async (images: any, callbackOrOptions?: ICallbackOrOptions, optionalOptions?: IOptions) => {
+  label = async (images: IImage|Array<IImage>, callbackOrOptions?: ICallbackOrOptions, optionalOptions?: IOptions) => {
+    let _results, _err;
     let callback, options;
     if (typeof callbackOrOptions !== 'function') {
       options = callbackOrOptions;
@@ -82,14 +85,27 @@ class ImageLabeler {
       options = optionalOptions;
     }
 
-    const model = await this.getModel();
-    model.summary();
+    try {
+      const model = await this.getModel();
+      model.summary();
+
+      const parsedImages: tf.Tensor4D = await parseImages(images);
+      _results = await predict(parsedImages, model);
+    } catch(err) {
+      _err = err;
+    }
 
     if (callback) {
+      callback(_err, _results);
       return;
     }
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      if (_err) {
+        return reject(_err);
+      }
+
+      return resolve(_results);
     });
   }
 }
