@@ -29,7 +29,7 @@ You can use `image-labeler` via a `<script />` tag:
 <html>
   <head>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.15.1/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/image-labeler/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/image-labeler/dist/index.umd.min.js"></script>
     <script>
       const imageLabeler = new ImageLabeler();
       imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
