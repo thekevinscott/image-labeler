@@ -1,13 +1,13 @@
 {
   "name": "image-labeler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Autosuggested labels for images and video",
   "main": "dist/index.js",
   "umd:main": "dist/index.umd.min.js",
   "module": "dist/index.mjs",
   "scripts": {
-    "build": "rimraf dist && microbundle",
-    "dev": "rimraf dist && microbundle watch"
+    "build": "rimraf dist && microbundle --name ImageLabeler",
+    "dev": "rimraf dist && microbundle watch --name ImageLabeler"
   },
   "repository": {
     "type": "git",
