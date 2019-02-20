@@ -1,24 +1,44 @@
-
-
 # Image Labeler
 
 `image-labeler` provides autosuggested labels for images or video. It relies on a Neural Network, MobileNet, performing inference in the browser to calculate the suggestions.
 
---- 
+---
 
 A demo is forthcoming.
 
 ## Table of Contents
 
+* [Getting Started](#getting-started)
+* [API](#api)
+* [Tests](#test)
+* [Versioning](#versioning)
+* [Contributing](#contributing)
+* [Author](#author)
+* [License](#license)
+* [Acknowledgments](#acknowledgments)
+
 ## Getting Started
+
+<small><a href="#table-of-contents">Back to Top</a></small>
 
 ### Via script tag
 
 You can use `image-labeler` via a `<script />` tag:
 
 ```
-<script src="tensorflow"></script>
-<script src="image-labeler"></script>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.15.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/image-labeler/dist/tf.min.js"></script>
+    <script>
+      const imageLabeler = new ImageLabeler();
+      imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
+        console.log(suggestions);
+        // ['one', 'two', 'three'];
+      });
+    </script>
+  </head>
+</html>
 ```
 
 ### Via ES6
@@ -37,8 +57,8 @@ yarn add image-labeler
 import ImageLabeler from 'image-labeler';
 const imageLabeler = new ImageLabeler();
 imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
-// also accepts a callback
-console.log(suggestions);
+  console.log(suggestions);
+  // ['one', 'two', 'three'];
 });
 // ['one,];
 ```
@@ -48,6 +68,8 @@ console.log(suggestions);
 Many image src are not loadable via CORS. Theres ways around this.
 
 ## API
+
+<small><a href="#table-of-contents">Back to Top</a></small>
 
 `constructor`
 
@@ -63,7 +85,11 @@ a gif about how filters work
 
 ## Tests
 
+<small><a href="#table-of-contents">Back to Top</a></small>
+
 ## Versioning
+
+<small><a href="#table-of-contents">Back to Top</a></small>
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/thekevinscott/image-labeler/tags). 
 
@@ -73,7 +99,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Author
 
-back to top
+<small><a href="#table-of-contents">Back to Top</a></small>
 
 [Kevin Scott](https://thekevinscott.com)
 
@@ -81,12 +107,12 @@ See also the list of [contributors](https://github.com/thekevinscott/image-label
 
 ## License
 
-backtotop 
+<small><a href="#table-of-contents">Back to Top</a></small>
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
-back to top
+<small><a href="#table-of-contents">Back to Top</a></small>
 
 This package leverages [`tensorflow.js`](https://js.tensorflow.org) and [MobileNet](https://arxiv.org/abs/1704.04861), both released by Google.
