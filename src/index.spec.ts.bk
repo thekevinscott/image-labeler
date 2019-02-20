@@ -1,7 +1,6 @@
 import 'ts-jest';
 import ImageLabeler from './index';
 jest.mock('@tensorflow/tfjs');
-jest.mock('@tensorflow/tfjs-core');
 
 describe('ImageLabeler', () => {
   test('it loads and sets defaults', () => {

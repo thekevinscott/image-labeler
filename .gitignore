@@ -1,8 +1,12 @@
-node_modules
-
 dist
+
+coverage
+
+yarn-error.log
+
+.ideas
+
+node_modules
 .rts2_cache_cjs
 .rts2_cache_es
 .rts2_cache_umd
-
-.ideas
