@@ -1,3 +1,5 @@
+
+
 # Image Labeler
 
 `image-labeler` provides autosuggested labels for images or video. It relies on a Neural Network, MobileNet, performing inference in the browser to calculate the suggestions.
@@ -29,6 +31,8 @@ import ImageLabeler from 'image-labeler';
 ## Tests
 
 ## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/thekevinscott/image-labeler/tags). 
 
 ## Contributing
 
