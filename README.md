@@ -70,7 +70,7 @@ imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
 
 <a href="#table-of-contents">Back to Top</a>
 
-`image-labeler` relies on Tensorflow.js, a Deep Learning framework released by Google. Currently only browser-based use cases are supported, though if Node.js support is something that could be supported if demand exists.
+`image-labeler` relies on Tensorflow.js, a Deep Learning framework released by Google. Currently only browser-based use cases are supported.
 
 ### Labels
 
