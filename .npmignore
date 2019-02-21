@@ -3,6 +3,7 @@ src
 jest.config.js
 karma.config.js
 coverage
+.circleci
 
 yarn-error.log
 
