@@ -1,4 +1,4 @@
-["tench",
+export default ["tench",
 "goldfish",
 "great white shark",
 "tiger shark",

@@ -41,7 +41,7 @@ const getImageData = () => {
 describe('parseImages', () => {
   it('handles an empty array', async () => {
     // black / white image
-    const result = await parseImages([]);
+    const result = await parseImages([], [224, 224]);
     expect(result.shape).to.eql([null, null, null, null]);
     expect(result.dataSync()).to.deep.equal(new Float32Array([]));
   });
@@ -49,21 +49,27 @@ describe('parseImages', () => {
   describe('string', () => {
     it('returns a tensor for a string', async () => {
       // black / white image
-      const result = await parseImages(BLACKWHITE_DATA);
-      expect(result.shape).to.eql([1, 1, 2, 3]);
-      expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
+      const result = await parseImages(BLACKWHITE_DATA, [2, 2]);
+      expect(result.shape).to.eql([1, 2, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
     });
 
     it('returns a tensor for a working image src', async () => {
       // break cache to fix issue with multiple tests caching image
       const src = `${BLACKWHITE_SRC}?cache=${Math.random()}`;
-      const result = await parseImages(src);
-      expect(result.shape).to.eql([1, 1, 2, 3]);
-      expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
+      const result = await parseImages(src, [2, 2]);
+      expect(result.shape).to.eql([1, 2, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
     });
 
     it('ignores an image that fails to load over CORS', async () => {
-      const result = await parseImages(`${BADIMAGE_SRC}?cache=${Math.random()}`);
+      const result = await parseImages(`${BADIMAGE_SRC}?cache=${Math.random()}`, [224, 224]);
       expect(result.dataSync()).to.eql(new Float32Array([]));
     });
   });
@@ -71,22 +77,28 @@ describe('parseImages', () => {
   describe('string', () => {
     it('returns a tensor for an image', async () => {
       const img = getImage(BLACKWHITE_DATA);
-      const result = await parseImages(img);
-      expect(result.shape).to.eql([1, 1, 2, 3]);
-      expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
+      const result = await parseImages(img, [2, 2]);
+      expect(result.shape).to.eql([1, 2, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
     });
 
     it('waits for image to load before parsing it', async () => {
       // break cache to fix issue with multiple tests caching image
       const img = getImage(`${BLACKWHITE_SRC}?cache=${Math.random()}`);
-      const result = await parseImages(img);
-      expect(result.shape).to.eql([1, 1, 2, 3]);
-      expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
+      const result = await parseImages(img, [2, 2]);
+      expect(result.shape).to.eql([1, 2, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
     });
 
     it('ignores an image that fails to load over CORS', async () => {
       const img = getImage(`${BADIMAGE_SRC}?cache=${Math.random()}`);
-      const result = await parseImages(img);
+      const result = await parseImages(img, [224, 224]);
       expect(result.dataSync()).to.eql(new Float32Array([]));
     });
   });
@@ -94,7 +106,7 @@ describe('parseImages', () => {
   describe('canvas', () => {
     it('returns a tensor for a canvas', async () => {
       const canvas = getCanvas();
-      const result = await parseImages(canvas);
+      const result = await parseImages(canvas, [1, 2]);
       expect(result.shape).to.eql([1, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
     });
@@ -103,7 +115,7 @@ describe('parseImages', () => {
   describe('ImageData', () => {
     it('returns a tensor for an ImageData', async () => {
       const imageData = getImageData();
-      const result = await parseImages(imageData);
+      const result = await parseImages(imageData, [1, 2]);
       expect(result.shape).to.eql([1, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
     });
@@ -112,21 +124,21 @@ describe('parseImages', () => {
   describe('Tensor', () => {
     it('returns a tensor for a 3d tensor', async () => {
       const tensor: tf.Tensor3D = tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32');
-      const result = await parseImages(tensor);
+      const result = await parseImages(tensor, [1, 2]);
       expect(result.shape).to.eql([1, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Float32Array([255,255,255,0,0,0]));
     });
 
     it('returns a tensor for a 4d tensor', async () => {
       const tensor: tf.Tensor4D = tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32');
-      const result = await parseImages(tensor);
+      const result = await parseImages(tensor, [1, 2]);
       expect(result.shape).to.eql([1, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Float32Array([255,255,255,0,0,0]));
     });
 
     it('returns an error for a 2d tensor', async () => {
       const tensor: tf.Tensor2D = tf.tensor([255,0], [2, 1], 'float32');
-      const result = await parseImages(tensor);
+      const result = await parseImages(tensor, [2, 2]);
       expect(result.dataSync()).to.eql(new Float32Array([]));
     });
   });
@@ -136,7 +148,7 @@ describe('parseImages', () => {
       const result = await parseImages([
         tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32'),
         tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32'),
-      ]);
+      ], [1, 2,]);
       expect(result.shape).to.eql([2, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Float32Array([
         255,255,255,0,0,0,
@@ -152,7 +164,7 @@ describe('parseImages', () => {
         tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32'),
         tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32'),
       ];
-      const result = await parseImages(images);
+      const result = await parseImages(images, [1, 2]);
       expect(result.shape).to.eql([5, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Int32Array([
         255,255,255,0,0,0,
@@ -170,7 +182,7 @@ describe('parseImages', () => {
         tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32'),
         tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32'),
       ];
-      const result = await parseImages(images);
+      const result = await parseImages(images, [1, 2]);
       expect(result.shape).to.eql([3, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Int32Array([
         255,255,255,0,0,0,

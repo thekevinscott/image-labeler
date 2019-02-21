@@ -32,7 +32,7 @@ const waitForImageToLoad = (img: HTMLImageElement): Promise<HTMLImageElement> =>
   });
 };
 
-const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
+const getImage = async (image: IImage, dims: [number, number]): Promise<tf.Tensor4D> => {
   if (image !instanceof tf.Tensor) {
     if (image.shape.length === 4) {
       return image as tf.Tensor4D;
@@ -52,16 +52,16 @@ const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
   }
 
   const pixels: tf.Tensor3D = tf.browser.fromPixels(image);
-  return pixels.expandDims(0);
+  return pixels.resizeBilinear(dims).expandDims(0);
 };
 
-const parseImages = async (images: IImage|Array<IImage>): Promise<tf.Tensor4D> => {
+const parseImages = async (images: IImage|Array<IImage>, dims: [number, number]): Promise<tf.Tensor4D> => {
   const preparedImages = getArrayOfImages(images)
 
   let tensor;
   for (let i = 0; i < preparedImages.length; i++) {
     try {
-      const img = await getImage(preparedImages[i]);
+      const img = await getImage(preparedImages[i], dims);
       if (tensor === undefined) {
         tensor = img;
       } else {

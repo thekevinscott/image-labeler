@@ -1,6 +1,6 @@
 {
   "name": "image-labeler",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Autosuggested labels for images and video",
   "main": "dist/index.js",
   "umd:main": "dist/index.umd.min.js",
