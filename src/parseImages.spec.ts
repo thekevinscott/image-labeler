@@ -59,6 +59,63 @@ describe('parseImages', () => {
     });
   });
 
+  describe('canvas', () => {
+    it('returns a tensor for a canvas', async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 2;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, 1, 1);
+      ctx.fillStyle = "black";
+      ctx.fillRect(1, 0, 1, 1);
+      const result = await parseImages(canvas);
+      expect(result.shape).to.eql([1, 1, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
+    });
+  });
+
+  describe('ImageData', () => {
+    it('returns a tensor for an ImageData', async () => {
+      const arr = new Uint8ClampedArray(8);
+      arr[0] = 255;
+      arr[1] = 255;
+      arr[2] = 255;
+      arr[3] = 255;
+      arr[4] = 0;
+      arr[5] = 0;
+      arr[6] = 0;
+      arr[7] = 255;
+      const imageData = new ImageData(arr as any, 2);
+      const result = await parseImages(imageData);
+      expect(result.shape).to.eql([1, 1, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
+    });
+  });
+
+  describe('Tensor', () => {
+    it('returns a tensor for a 3d tensor', async () => {
+      const tensor: tf.Tensor3D = tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32');
+      const result = await parseImages(tensor);
+      expect(result.shape).to.eql([1, 1, 2, 3]);
+      console.log(typeof result.dataSync());
+      expect(result.dataSync()).to.deep.equal(new Float32Array([255,255,255,0,0,0]));
+    });
+
+    it('returns a tensor for a 4d tensor', async () => {
+      const tensor: tf.Tensor4D = tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32');
+      const result = await parseImages(tensor);
+      expect(result.shape).to.eql([1, 1, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Float32Array([255,255,255,0,0,0]));
+    });
+
+    it('returns an error for a 2d tensor', async () => {
+      const tensor: tf.Tensor2D = tf.tensor([255,0], [2, 1], 'float32');
+      const result = await parseImages(tensor);
+      expect(result.dataSync()).to.eql(new Float32Array([]));
+    });
+  });
+
   // test('it returns a tensor for a tensor', async () => {
   //   const t = tf.tensor([0, 1, 3]);
   //   const result = await parseImages(t);

@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
-type IImage = string|ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement;
+type IImage = string|ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|tf.Tensor;
 
 const getArrayOfImages = (images: IImage|Array<IImage>): Array<IImage> => {
   let arrayOfImages: Array<IImage>;
@@ -38,9 +38,16 @@ const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
   } else if (image instanceof HTMLImageElement) {
     image = await waitForImageToLoad(image);
   }
-  // if (image instanceof tf.Tensor) {
-  //   return image;
-  // }
+
+  if (image !instanceof tf.Tensor) {
+    if (image.shape.length === 4) {
+      return image as tf.Tensor4D;
+    } else if (image.shape.length === 3) {
+      return image.expandDims(0);
+    }
+
+    throw new Error(`You've passed an invalid tensor of shape ${image.shape}, please pass a 3 or 4 dimensional tensor`);
+  }
   const pixels: tf.Tensor3D = tf.browser.fromPixels(image);
   return pixels.expandDims(0);
 };
