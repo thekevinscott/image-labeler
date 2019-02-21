@@ -13,17 +13,20 @@ const getArrayOfImages = (images: IImage|Array<IImage>): Array<IImage> => {
   return arrayOfImages;
 };
 
-const loadImage = (src): Promise<HTMLImageElement> => {
+const loadImage = async (src): Promise<HTMLImageElement> => {
   const img = new Image();
   img.src = src;
-  img.crossOrigin = 'anonymous';
+  img.crossOrigin = '';
+  return await waitForImageToLoad(img);
+};
+
+const waitForImageToLoad = (img: HTMLImageElement): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     img.onload = () => {
       resolve(img);
     };
 
     img.onerror = (err) => {
-      console.log('reject');
       reject(err);
     };
   });
@@ -32,6 +35,8 @@ const loadImage = (src): Promise<HTMLImageElement> => {
 const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
   if (typeof image === 'string') {
     image = await loadImage(image);
+  } else if (image instanceof HTMLImageElement) {
+    image = await waitForImageToLoad(image);
   }
   // if (image instanceof tf.Tensor) {
   //   return image;
@@ -48,7 +53,7 @@ const parseImages = async (images: IImage|Array<IImage>): Promise<tf.Tensor4D> =
       const img = await getImage(preparedImages[i]);
       return img;
     } catch(err) {
-      console.error('error', err);
+      console.error('There was an error parsing image', err);
     }
   }
 
