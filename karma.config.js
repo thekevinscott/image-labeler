@@ -16,18 +16,5 @@ module.exports = function(config) {
     },
     reporters: ["progress", "karma-typescript"],
     browsers: ["Chrome"]
-
-    // files: [
-    //   // { pattern: "node_modules/expect.js/index.js" },
-    //   { pattern: "src/**/*.spec.ts" }
-    // ],
-
-    /*
-    reporters: ["dots", "karma-typescript"],
-
-    browsers: ["ChromeHeadless"],
-
-    singleRun: true
-    */
   });
 };
