@@ -92,7 +92,7 @@ The ImageNet labels are fairly literal:
 
 If literal labels fit your use case, then the defaults will work fine. If you wish to provide more descriptive labels, you can provide your [own model and labels trained on your own dataset](#constructor).
 
-For assistance training a pretrained model, see [`ml-classifier`](http://github.com/thekevinscott/ml-classifier), a tool for tuning MobileNet for your particular use case in your browser.
+For assistance training a pretrained model, see [`ml-classifier`](http://github.com/thekevinscott/ml-classifier), a tool for tuning MobileNet with custom categories and labels in your browser.
 
 ### CORS
 
