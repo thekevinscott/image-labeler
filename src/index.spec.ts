@@ -57,9 +57,7 @@ describe('ImageLabeler', () => {
 
     it('returns labels for an image', async () => {
       const imageLabeler = new ImageLabeler();
-      console.log('two');
       const results = await imageLabeler.label(BLACKWHITE_DATA);
-      console.log('three');
       expect(results.length).to.equal(DEFAULT_LABELS);
       expect(results[0].label).to.equal(expectedLabelIds[0]);
       expect(results[1].label).to.equal(expectedLabelIds[1]);
