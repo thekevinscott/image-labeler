@@ -70,7 +70,7 @@ imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
 
 <a href="#table-of-contents">Back to Top</a>
 
-`image-labeler` is a tool built on top of a Neural Network running in your Browser that suggests labels and tags for images.
+`image-labeler` is a tool built on top of a Neural Network running in your Browser that suggests labels and tags for images. It relies on Tensorflow.js, a Deep Learning framework released by Google. Currently only browser-based use cases are supported, though if Node.js support is something that could be supported if demand exists.
 
 ### Labels
 
