@@ -1,9 +1,3 @@
-export type IOptions = {
-  labels?: number;
-  filters?: number;
-  includeConfidence?: boolean;
-}
-
 export type IImage = string|ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement;
 
 export type ILabels = Array<IPred>;
@@ -16,3 +10,17 @@ export type IPred = {
 };
 
 export type IPreds = Array<IPred>;
+
+export type IModelSettings = {
+  url: string;
+  labels: {
+    [index: string]: string;
+  } | string[];
+};
+
+export type IOptions = {
+  labels?: number;
+  filters?: number;
+  includeConfidence?: boolean;
+  model?: IModelSettings;
+}

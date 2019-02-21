@@ -1,11 +1,13 @@
 import ImageLabeler from './index';
 import { expect } from 'chai';
 import {
+  DEFAULT_MODEL_SETTINGS,
   DEFAULT_LABELS,
   DEFAULT_FILTERS,
   DEFAULT_INCLUDE_CONFIDENCE,
 } from './config';
 import simple from './labels/simple';
+const DEFAULT_LABEL_STRINGS = DEFAULT_MODEL_SETTINGS.labels;
 
 describe('ImageLabeler', () => {
   it('loads and sets defaults', () => {
@@ -42,7 +44,7 @@ describe('ImageLabeler', () => {
     expect(imageLabeler.includeConfidence).to.equal(true);
   });
 
-  describe.only('label', () => {
+  describe('label', () => {
     const BLACKWHITE_DATA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAAXNSR0IArs4c6QAAAA9JREFUCB1j+A8EDAwM/wEa7gT8qKTw7wAAAABJRU5ErkJggg==';
 
     const expectedLabelIds = [
@@ -55,7 +57,9 @@ describe('ImageLabeler', () => {
 
     it('returns labels for an image', async () => {
       const imageLabeler = new ImageLabeler();
+      console.log('two');
       const results = await imageLabeler.label(BLACKWHITE_DATA);
+      console.log('three');
       expect(results.length).to.equal(DEFAULT_LABELS);
       expect(results[0].label).to.equal(expectedLabelIds[0]);
       expect(results[1].label).to.equal(expectedLabelIds[1]);

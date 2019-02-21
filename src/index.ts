@@ -1,10 +1,9 @@
 import * as tf from '@tensorflow/tfjs';
 import {
-  MODEL_URL,
   DEFAULT_LABELS,
   DEFAULT_FILTERS,
   DEFAULT_INCLUDE_CONFIDENCE,
-  DEFAULT_LABEL_STRINGS,
+  DEFAULT_MODEL_SETTINGS,
 } from './config';
 import parseImages from './parseImages';
 import predict from './predict';
@@ -13,6 +12,7 @@ import {
   ICallback,
   IImage,
   ILabels,
+  IModelSettings,
 } from './types';
 
 type IGetParametersResponse = {
@@ -53,6 +53,7 @@ class ImageLabeler {
   labels: number = DEFAULT_LABELS;
   filters: number = DEFAULT_FILTERS;
   includeConfidence: boolean = DEFAULT_INCLUDE_CONFIDENCE;
+  modelSettings: IModelSettings = DEFAULT_MODEL_SETTINGS;
 
   callbacks: Function[] = [];
 
@@ -61,9 +62,6 @@ class ImageLabeler {
   }
 
   configure = async (options: IOptions = {}) => {
-    // on load, load the model
-    this.getModel();
-
     if (options.labels !== undefined) {
       this.labels = options.labels;
     }
@@ -73,6 +71,13 @@ class ImageLabeler {
     if (options.includeConfidence !== undefined) {
       this.includeConfidence = options.includeConfidence;
     }
+    if (options.model !== undefined) {
+      this.model = undefined;
+      this.modelSettings = options.model;
+    }
+
+    // on load, load the model
+    this.getModel();
   }
 
   loadModel = async () => {
@@ -88,7 +93,10 @@ class ImageLabeler {
     }
 
     this.loadingModel = true;
-    this.model = await tf.loadLayersModel(MODEL_URL);
+    if (!this.modelSettings) {
+      throw new Error('Model is not specified');
+    }
+    this.model = await tf.loadLayersModel(this.modelSettings.url);
     this.loadingModel = false;
 
     while (this.callbacks.length) {
@@ -118,7 +126,7 @@ class ImageLabeler {
       const shape: number[] = model.inputs[0].shape;
       const dims: [number, number] = [shape[1], shape[2]];
       const parsedImages: tf.Tensor4D = await parseImages(images, dims);
-      results = await predict(parsedImages, model, DEFAULT_LABEL_STRINGS);
+      results = await predict(parsedImages, model, this.modelSettings.labels);
       results = results.slice(0, options.labels || this.labels);
     } catch(_err) {
       err = _err;
