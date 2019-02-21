@@ -2,7 +2,7 @@
 
 `image-labeler` provides autosuggested labels for images or video. It relies on a Neural Network, MobileNet, performing inference in the browser to calculate the suggestions.
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![CircleCI](https://circleci.com/gh/thekevinscott/image-labeler.svg?style=svg)](https://circleci.com/gh/thekevinscott/image-labeler)
 
 A demo is forthcoming.
 
