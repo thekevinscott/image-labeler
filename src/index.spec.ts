@@ -35,4 +35,13 @@ describe('ImageLabeler', () => {
     expect(imageLabeler.filters).to.equal(3);
     expect(imageLabeler.includeConfidence).to.equal(true);
   });
+
+  describe('label', () => {
+    const BLACKWHITE_DATA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAAXNSR0IArs4c6QAAAA9JREFUCB1j+A8EDAwM/wEa7gT8qKTw7wAAAABJRU5ErkJggg==';
+
+    it('returns labels for an image', async () => {
+      const imageLabeler = new ImageLabeler();
+      const results = await imageLabeler.label(BLACKWHITE_DATA);
+    });
+  });
 });

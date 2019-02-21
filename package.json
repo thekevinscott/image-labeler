@@ -9,7 +9,7 @@
     "test": "karma start karma.config.js --auto-watch",
     "test:ci": "karma start karma.config.js --single-run --no-auto-watch",
     "build": "rimraf dist && microbundle --name ImageLabeler",
-    "dev": "rimraf dist && microbundle watch --name ImageLabeler"
+    "develop": "rimraf dist && microbundle watch --name ImageLabeler"
   },
   "repository": {
     "type": "git",

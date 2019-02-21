@@ -13,11 +13,11 @@ const getArrayOfImages = (images: IImage|Array<IImage>): Array<IImage> => {
   return arrayOfImages;
 };
 
-const loadImage = async (src): Promise<HTMLImageElement> => {
+const loadImage = (src): HTMLImageElement => {
   const img = new Image();
   img.src = src;
   img.crossOrigin = '';
-  return await waitForImageToLoad(img);
+  return img;
 };
 
 const waitForImageToLoad = (img: HTMLImageElement): Promise<HTMLImageElement> => {
@@ -33,12 +33,6 @@ const waitForImageToLoad = (img: HTMLImageElement): Promise<HTMLImageElement> =>
 };
 
 const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
-  if (typeof image === 'string') {
-    image = await loadImage(image);
-  } else if (image instanceof HTMLImageElement) {
-    image = await waitForImageToLoad(image);
-  }
-
   if (image !instanceof tf.Tensor) {
     if (image.shape.length === 4) {
       return image as tf.Tensor4D;
@@ -47,6 +41,14 @@ const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
     }
 
     throw new Error(`You've passed an invalid tensor of shape ${image.shape}, please pass a 3 or 4 dimensional tensor`);
+  }
+
+  if (typeof image === 'string') {
+    image = loadImage(image);
+  }
+
+  if (image instanceof HTMLImageElement) {
+    image = await waitForImageToLoad(image);
   }
 
   const pixels: tf.Tensor3D = tf.browser.fromPixels(image);

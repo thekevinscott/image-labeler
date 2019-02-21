@@ -82,8 +82,6 @@ class ImageLabeler {
 
     try {
       const model = await this.getModel();
-      model.summary();
-
       const parsedImages: tf.Tensor4D = await parseImages(images);
       _results = await predict(parsedImages, model);
     } catch(err) {
