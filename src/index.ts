@@ -73,6 +73,9 @@ class ImageLabeler {
     }
     if (options.model !== undefined) {
       this.model = undefined;
+      if (!options.model.url || !options.model.labels) {
+        throw new Error('Invalid model provided');
+      }
       this.modelSettings = options.model;
     }
 
