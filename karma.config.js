@@ -1,6 +1,11 @@
 // karma.conf.js
 module.exports = function(config) {
   config.set({
+    client: {
+      mocha: {
+        timeout : 5000,
+      }
+    },
 
     frameworks: ["mocha", "karma-typescript"],
     files: [
