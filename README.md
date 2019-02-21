@@ -90,7 +90,7 @@ The ImageNet labels are fairly literal:
 ...
 ```
 
-You'll probably have more luck providing your own labels and model trained on your own dataset. `image-labeler` provides a parameter for bringing your [own model and labels file](#constructor).
+If literal labels fit your use case, then the defaults will work fine. If you wish to provide more descriptive labels, you can provide your [own model and labels trained on your own dataset](#constructor).
 
 For assistance training a pretrained model, see [`ml-classifier`](http://github.com/thekevinscott/ml-classifier), a tool for tuning MobileNet for your particular use case in your browser.
 
