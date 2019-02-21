@@ -198,7 +198,7 @@ See also the list of [contributors](https://github.com/thekevinscott/image-label
 
 <a href="#table-of-contents">Back to Top</a>
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
