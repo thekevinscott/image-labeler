@@ -48,6 +48,7 @@ const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
 
     throw new Error(`You've passed an invalid tensor of shape ${image.shape}, please pass a 3 or 4 dimensional tensor`);
   }
+
   const pixels: tf.Tensor3D = tf.browser.fromPixels(image);
   return pixels.expandDims(0);
 };
@@ -55,16 +56,27 @@ const getImage = async (image: IImage): Promise<tf.Tensor4D> => {
 const parseImages = async (images: IImage|Array<IImage>): Promise<tf.Tensor4D> => {
   const preparedImages = getArrayOfImages(images)
 
+  let tensor;
   for (let i = 0; i < preparedImages.length; i++) {
     try {
+      console.log('i', i);
       const img = await getImage(preparedImages[i]);
-      return img;
+      console.log(preparedImages[i], img);
+      if (tensor === undefined) {
+        tensor = img;
+        // img.dispose();
+      } else {
+        const old = tensor;
+        tensor = tensor.concat(img);
+        old.dispose();
+        // img.dispose();
+      }
     } catch(err) {
       console.error('There was an error parsing image', err);
     }
   }
 
-  return tf.tensor([]);
+  return tensor || tf.tensor([], [null, null, null, null]);
 };
 
 export default parseImages;

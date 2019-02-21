@@ -13,7 +13,39 @@ const getImage = (src) => {
   return img;
 };
 
+const getCanvas = () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 2;
+  canvas.height = 1;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, 1, 1);
+  ctx.fillStyle = "black";
+  ctx.fillRect(1, 0, 1, 1);
+  return canvas;
+};
+
+const getImageData = () => {
+  const arr = new Uint8ClampedArray(8);
+  arr[0] = 255;
+  arr[1] = 255;
+  arr[2] = 255;
+  arr[3] = 255;
+  arr[4] = 0;
+  arr[5] = 0;
+  arr[6] = 0;
+  arr[7] = 255;
+  return new ImageData(arr as any, 2);
+};
+
 describe('parseImages', () => {
+  it('handles an empty array', async () => {
+    // black / white image
+    const result = await parseImages([]);
+    expect(result.shape).to.eql([null, null, null, null]);
+    expect(result.dataSync()).to.deep.equal(new Float32Array([]));
+  });
+
   describe('string', () => {
     it('returns a tensor for a string', async () => {
       // black / white image
@@ -61,14 +93,7 @@ describe('parseImages', () => {
 
   describe('canvas', () => {
     it('returns a tensor for a canvas', async () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 2;
-      canvas.height = 1;
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, 1, 1);
-      ctx.fillStyle = "black";
-      ctx.fillRect(1, 0, 1, 1);
+      const canvas = getCanvas();
       const result = await parseImages(canvas);
       expect(result.shape).to.eql([1, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
@@ -77,16 +102,7 @@ describe('parseImages', () => {
 
   describe('ImageData', () => {
     it('returns a tensor for an ImageData', async () => {
-      const arr = new Uint8ClampedArray(8);
-      arr[0] = 255;
-      arr[1] = 255;
-      arr[2] = 255;
-      arr[3] = 255;
-      arr[4] = 0;
-      arr[5] = 0;
-      arr[6] = 0;
-      arr[7] = 255;
-      const imageData = new ImageData(arr as any, 2);
+      const imageData = getImageData();
       const result = await parseImages(imageData);
       expect(result.shape).to.eql([1, 1, 2, 3]);
       expect(result.dataSync()).to.deep.equal(new Int32Array([255,255,255,0,0,0]));
@@ -116,22 +132,52 @@ describe('parseImages', () => {
     });
   });
 
-  // test('it returns a tensor for a tensor', async () => {
-  //   const t = tf.tensor([0, 1, 3]);
-  //   const result = await parseImages(t);
-  //   expect(result).toEqual(tf.tensor([]));
-  // });
+  describe('multiple types', () => {
+    it('handles two types', async () => {
+      const result = await parseImages([
+        tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32'),
+        tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32'),
+      ]);
+      expect(result.shape).to.eql([2, 1, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Float32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
+    });
 
-  // test('it returns a tensor for an HTML Image element', async () => {
-  //   const img = new Image();
-  //   img.src = 'foobar';
-  //   const result = await parseImages(img);
-  //   expect(result).toEqual(tf.tensor([]));
-  // });
+    it('handles multiple types', async () => {
+      const images = [
+        BLACKWHITE_DATA,
+        getCanvas(),
+        getImageData(),
+        tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32'),
+        tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32'),
+      ];
+      const result = await parseImages(images);
+      expect(result.shape).to.eql([5, 1, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
+    });
 
-  // test('it returns a tensor for a Canvas element', async () => {
-  //   const canvas = new Canvas();
-  //   const result = await parseImages(canvas);
-  //   expect(result).toEqual(tf.tensor([]));
-  // });
+    it('handles multiple types with failing types', async () => {
+      const images = [
+        BLACKWHITE_DATA,
+        getImage(BADIMAGE_SRC),
+        tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32'),
+        tf.tensor([[255,255,255,0,0,0]], [1, 1, 2, 3], 'float32'),
+      ];
+      const result = await parseImages(images);
+      expect(result.shape).to.eql([3, 1, 2, 3]);
+      expect(result.dataSync()).to.deep.equal(new Int32Array([
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+        255,255,255,0,0,0,
+      ]));
+    });
+  });
 });
