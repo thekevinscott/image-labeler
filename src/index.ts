@@ -52,7 +52,7 @@ class ImageLabeler {
     }
 
     this.loadingModel = true;
-    this.model = await tf.loadModel(MODEL_URL);
+    this.model = await tf.loadLayersModel(MODEL_URL);
     this.loadingModel = false;
 
     while (this.callbacks.length) {

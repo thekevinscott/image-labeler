@@ -114,7 +114,6 @@ describe('parseImages', () => {
       const tensor: tf.Tensor3D = tf.tensor([[255,255,255,0,0,0]], [1, 2, 3], 'float32');
       const result = await parseImages(tensor);
       expect(result.shape).to.eql([1, 1, 2, 3]);
-      console.log(typeof result.dataSync());
       expect(result.dataSync()).to.deep.equal(new Float32Array([255,255,255,0,0,0]));
     });
 
