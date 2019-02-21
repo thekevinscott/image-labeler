@@ -59,17 +59,14 @@ const parseImages = async (images: IImage|Array<IImage>): Promise<tf.Tensor4D> =
   let tensor;
   for (let i = 0; i < preparedImages.length; i++) {
     try {
-      console.log('i', i);
       const img = await getImage(preparedImages[i]);
-      console.log(preparedImages[i], img);
       if (tensor === undefined) {
         tensor = img;
-        // img.dispose();
       } else {
         const old = tensor;
         tensor = tensor.concat(img);
         old.dispose();
-        // img.dispose();
+        img.dispose();
       }
     } catch(err) {
       console.error('There was an error parsing image', err);
