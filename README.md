@@ -74,7 +74,7 @@ imageLabeler.label('https://imgur.com/some-image').then(suggestions => {
 
 ### Labels
 
-By default, `image-labeler` uses [MobileNet](https://arxiv.org/abs/1704.04861), a pretrained model developed and released by Google. It's fast and runs well in the browser, and is trained on top of ImageNet, a large corpus of images with 1000 labels. The original labels are stored as a [JSON file](https://github.com/thekevinscott/image-labeler/blob/master/src/labels/original.json), but the tool by default uses a set of [simplied labels](https://github.com/thekevinscott/image-labeler/blob/master/src/labels/simple.ts) put together by @anishathalye.
+By default, `image-labeler` uses [MobileNet](https://arxiv.org/abs/1704.04861), a pretrained model developed and released by Google. It's fast and runs well in the browser, and is trained on top of ImageNet, a large corpus of images with 1000 labels. The original labels are stored as a [JSON file](https://github.com/thekevinscott/image-labeler/blob/master/src/labels/original.json), but the tool by default uses a set of [simplied labels](https://github.com/thekevinscott/image-labeler/blob/master/src/labels/simple.ts) put together by [@anishathalye](https://github.com/anishathalye).
 
 These labels are fairly literal - you can read through them yourself:
 
