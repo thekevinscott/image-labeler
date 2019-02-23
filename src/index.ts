@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import {
-  DEFAULT_LABELS,
+  DEFAULT_NUMBER_OF_LABELS,
   DEFAULT_FILTERS,
   DEFAULT_INCLUDE_CONFIDENCE,
   DEFAULT_MODEL_SETTINGS,
@@ -22,27 +22,33 @@ type IGetParametersResponse = {
 
 type IGetParametersParams = [(ICallback|IOptions)?, IOptions?];
 
-const getParameters = (params: IGetParametersParams = []): IGetParametersResponse => {
+const getParameters = (params: IGetParametersParams = [], defaultOptions: IOptions): IGetParametersResponse => {
   if (params.length === 2) {
     return {
       callback: params[0] as ICallback,
-      options: params[1],
+      options: {
+        ...defaultOptions,
+        ...params[1],
+      },
     };
   } else if (params.length === 0) {
     return {
-      options: {},
+      options: defaultOptions,
     };
   }
 
   if (typeof params[0] !== 'function') {
     return {
-      options: params[0],
+      options: {
+        ...defaultOptions,
+        ...params[0],
+      },
     };
   };
 
   return {
     callback: params[0],
-    options: {},
+    options: defaultOptions,
   };
 };
 
@@ -50,10 +56,12 @@ class ImageLabeler {
   loadingModel: boolean = false;
   model: tf.Model;
 
-  labels: number = DEFAULT_LABELS;
-  filters: number = DEFAULT_FILTERS;
-  includeConfidence: boolean = DEFAULT_INCLUDE_CONFIDENCE;
-  modelSettings: IModelSettings = DEFAULT_MODEL_SETTINGS;
+  options: IOptions = {
+    numberOfLabels: DEFAULT_NUMBER_OF_LABELS,
+    filters: DEFAULT_FILTERS,
+    includeConfidence: DEFAULT_INCLUDE_CONFIDENCE,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  };
 
   callbacks: Function[] = [];
 
@@ -62,22 +70,16 @@ class ImageLabeler {
   }
 
   configure = async (options: IOptions = {}) => {
-    if (options.labels !== undefined) {
-      this.labels = options.labels;
-    }
-    if (options.filters !== undefined) {
-      this.filters = options.filters;
-    }
-    if (options.includeConfidence !== undefined) {
-      this.includeConfidence = options.includeConfidence;
-    }
     if (options.model !== undefined) {
       this.model = undefined;
       if (!options.model.url || !options.model.labels) {
         throw new Error('Invalid model provided');
       }
-      this.modelSettings = options.model;
     }
+    this.options = {
+      ...this.options,
+      ...options,
+    };
 
     // on load, load the model
     this.getModel();
@@ -121,16 +123,16 @@ class ImageLabeler {
     const {
       callback,
       options,
-    } = getParameters(rest);
+    } = getParameters(rest, this.options);
 
     let results, err;
     try {
       const model = await this.getModel();
       const shape: number[] = model.inputs[0].shape;
       const dims: [number, number] = [shape[1], shape[2]];
-      const parsedImages: tf.Tensor4D = await parseImages(images, dims);
-      results = await predict(parsedImages, model, this.modelSettings.labels);
-      results = results.slice(0, options.labels || this.labels);
+      const parsedImages: tf.Tensor4D = await parseImages(images, dims, options.filters);
+      results = await predict(parsedImages, model, options.modelSettings.labels);
+      results = results.slice(0, options.numberOfLabels);
     } catch(_err) {
       err = _err;
     }

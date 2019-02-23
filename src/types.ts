@@ -19,8 +19,8 @@ export type IModelSettings = {
 };
 
 export type IOptions = {
-  labels?: number;
-  filters?: number;
+  numberOfLabels?: number;
+  filters?: Array<number>;
   includeConfidence?: boolean;
-  model?: IModelSettings;
+  modelSettings?: IModelSettings;
 }

@@ -9,6 +9,6 @@ export const DEFAULT_MODEL_SETTINGS: IModelSettings = {
   url,
   labels,
 };
-export const DEFAULT_LABELS = 5;
-export const DEFAULT_FILTERS = 2;
+export const DEFAULT_NUMBER_OF_LABELS = 5;
+export const DEFAULT_FILTERS = [1, 0.5];
 export const DEFAULT_INCLUDE_CONFIDENCE = false;

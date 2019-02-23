@@ -133,7 +133,6 @@ describe('ImageLabeler', () => {
       });
       const results = await imageLabeler.label(BLACKWHITE_DATA);
       expect(results.length).to.equal(DEFAULT_LABELS);
-      console.log(labels);
       expect(results[0].label).to.equal(labels[expectedLabelIds[0]]);
       expect(results[1].label).to.equal(labels[expectedLabelIds[1]]);
       expect(results[2].label).to.equal(labels[expectedLabelIds[2]]);

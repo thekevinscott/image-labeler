@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import filterImage, { IFilters } from './filterImage';
 
 type IImage = string|ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|tf.Tensor;
 
@@ -55,20 +56,21 @@ const getImage = async (image: IImage, dims: [number, number]): Promise<tf.Tenso
   return pixels.resizeBilinear(dims).expandDims(0);
 };
 
-const parseImages = async (images: IImage|Array<IImage>, dims: [number, number]): Promise<tf.Tensor4D> => {
+const parseImages = async (images: IImage|Array<IImage>, dims: [number, number], filters: IFilters): Promise<tf.Tensor4D> => {
   const preparedImages = getArrayOfImages(images)
 
   let tensor;
   for (let i = 0; i < preparedImages.length; i++) {
     try {
       const img = await getImage(preparedImages[i], dims);
+      const filteredImg = filterImage(img, filters);
       if (tensor === undefined) {
-        tensor = img;
+        tensor = filteredImg;
       } else {
         const old = tensor;
-        tensor = tensor.concat(img);
+        tensor = tensor.concat(filteredImg);
         old.dispose();
-        img.dispose();
+        filteredImg.dispose();
       }
     } catch(err) {
       console.error('There was an error parsing image', err);
