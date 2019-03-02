@@ -138,8 +138,8 @@ Filters that don't cleanly add up to 100% are treated like remainders, above. He
 
 Initializes the component. Accepts a single argument, `options`, an object with the following properties:
 
-* `model` _(optional)_ - A pretrained model URL and labels JSON file, in the form of `{ url: 'https://...', labels: { 0: 'melancholy', 1: 'uplifting' ...} }`.
-* `labels` _(optional)_ - The number of labels to return. Defaults to 5.
+* `modelSettings` _(optional)_ - A pretrained model URL and labels JSON file, in the form of `{ url: 'https://...', labels: { 0: 'melancholy', 1: 'uplifting' ...} }`.
+* `numberOfLabels` _(optional)_ - The number of labels to return. Defaults to 5.
 * `filters` _(optional)_ - The number of filters to use. Defaults to 2 for images greater than 100 pixels.
 * `includeConfidence` _(optional)_ - Whether to include confidence scores for each label or not. Defaults to false.
 
@@ -147,7 +147,7 @@ Initializes the component. Accepts a single argument, `options`, an object with 
 
 ```
 new ImageLabeler({
-  labels: 5,
+  numberOfLabels: 5,
   filters: 2,
   includeConfidence: true,
 });
@@ -162,7 +162,7 @@ Same function as initialize above, but can be called to update options are insta
 ```
 const imageLabeler = new ImageLabeler();
 imageLabeler.configure({
-  labels: 5,
+  numberOfLabels: 5,
   filters: 2,
   includeConfidence: true,
 });

@@ -6,6 +6,7 @@ import {
   DEFAULT_MODEL_SETTINGS,
 } from './config';
 import parseImages from './parseImages';
+// import normalizeImages from './normalizeImages';
 import predict from './predict';
 import {
   IOptions,
@@ -70,9 +71,9 @@ class ImageLabeler {
   }
 
   configure = async (options: IOptions = {}) => {
-    if (options.model !== undefined) {
+    if (options.modelSettings !== undefined) {
       this.model = undefined;
-      if (!options.model.url || !options.model.labels) {
+      if (!options.modelSettings.url || !options.modelSettings.labels) {
         throw new Error('Invalid model provided');
       }
     }
@@ -98,10 +99,10 @@ class ImageLabeler {
     }
 
     this.loadingModel = true;
-    if (!this.modelSettings) {
+    if (!this.options.modelSettings) {
       throw new Error('Model is not specified');
     }
-    this.model = await tf.loadLayersModel(this.modelSettings.url);
+    this.model = await tf.loadLayersModel(this.options.modelSettings.url);
     this.loadingModel = false;
 
     while (this.callbacks.length) {
@@ -131,10 +132,12 @@ class ImageLabeler {
       const shape: number[] = model.inputs[0].shape;
       const dims: [number, number] = [shape[1], shape[2]];
       const parsedImages: tf.Tensor4D = await parseImages(images, dims, options.filters);
-      console.log('these also need to be normalized and resized');
-      results = await predict(parsedImages, model, options.modelSettings.labels);
-      results = results.slice(0, options.numberOfLabels);
+      if (parsedImages.shape[0] === null) {
+        throw new Error('Something went wrong when parsing the images');
+      }
+      results = await predict(parsedImages, model, options);
     } catch(_err) {
+      console.error(_err);
       err = _err;
     }
 

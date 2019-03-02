@@ -23,13 +23,17 @@ const loadImage = (src): HTMLImageElement => {
 
 const waitForImageToLoad = (img: HTMLImageElement): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
-    img.onload = () => {
+    if (img.complete && img.naturalWidth !== 0) {
       resolve(img);
-    };
+    } else {
+      img.onload = () => {
+        resolve(img);
+      };
 
-    img.onerror = (err) => {
-      reject(err);
-    };
+      img.onerror = (err) => {
+        reject(err);
+      };
+    }
   });
 };
 
@@ -63,7 +67,7 @@ const parseImages = async (images: IImage|Array<IImage>, dims: [number, number],
   for (let i = 0; i < preparedImages.length; i++) {
     try {
       const img = await getImage(preparedImages[i], dims);
-      const filteredImg = filterImage(img, filters);
+      const filteredImg = filterImage(img, dims, filters);
       if (tensor === undefined) {
         tensor = filteredImg;
       } else {

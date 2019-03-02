@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import normalizeImage from './normalizeImage';
 
 type IFilter = number;
 export type IFilters = Array<IFilter>;
@@ -62,7 +63,7 @@ export const getSlices = ([ height, width ]: IDims, filter: IFilter): ISlices =>
   };
 };
 
-const filterImage = (img: tf.Tensor4D, filters: IFilters) => tf.tidy(() => {
+const filterImage = (img: tf.Tensor4D, dims: [number, number], filters: IFilters) => tf.tidy(() => {
   let t;
   filters.forEach(filter => {
     const {
@@ -73,10 +74,12 @@ const filterImage = (img: tf.Tensor4D, filters: IFilters) => tf.tidy(() => {
     slices.forEach(slice => {
       const start = [0, ...slice, 0];
       const end = [1, ...size, 3];
+      const slicedImage = img.slice(start, end);
+      const image = normalizeImage(slicedImage, dims);
       if (t) {
-        t = t.concat(img.slice(start, end));
+        t = t.concat(image);
       } else {
-        t = img.slice(start, end);
+        t = image;
       }
     });
   });

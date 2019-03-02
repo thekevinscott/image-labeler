@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@tensorflow/tfjs": "^0.14.2",
-    "@tensorflow/tfjs-vis": "^0.4.2"
+    "@tensorflow/tfjs": "^0.15.3",
+    "@tensorflow/tfjs-vis": "^0.4.2",
+    "classnames": "^2.2.6",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "react-dropzone": "^9.0.0"
   },
   "scripts": {
     "visualization": "parcel visualization-src/index.html --no-cache --no-source-maps --no-autoinstall",
@@ -12,6 +16,9 @@
     "develop": "parcel src/index.html --no-hmr --no-cache --no-source-maps --no-autoinstall"
   },
   "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/plugin-proposal-class-properties": "^7.3.4",
+    "@babel/plugin-syntax-async-generators": "^7.2.0",
     "babel-polyfill": "^6.26.0",
     "parcel": "^1.11.0"
   }
