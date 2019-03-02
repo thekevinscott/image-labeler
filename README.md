@@ -108,7 +108,7 @@ A third option is to use a proxy server for routing, such as [CORS Anywhere](htt
 
 ### Filters
 
-`image-labeler` uses an innovation borrowed from [YOLO](https://pjreddie.com/darknet/yolo/), an object segmentation Neural Network, to increase the amount of image data and increase the granularity with which predictions are made.
+`image-labeler` uses an innovation borrowed from [YOLO](https://pjreddie.com/darknet/yolo/) to increase the amount of image data and increase the granularity with which predictions are made.
 
 Incoming images are divided into pieces, based on the size of the Neural Network's input layer. Let's say you're leveraging the default MobileNet Neural Network. The pieces will be:
 
