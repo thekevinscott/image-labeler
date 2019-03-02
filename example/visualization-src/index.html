@@ -1,0 +1,141 @@
+<html>
+  <head>
+<style type="text/css">
+body, html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  padding: 10px;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+canvas {
+  margin-right: 10px;
+}
+
+.image {
+  border-right: 1px solid rgba(0,0,0,0.2);
+}
+
+.image:nth-child(3n + 1) {
+  flex: 2;
+}
+
+.image:nth-child(3n + 2) {
+  flex: 1;
+}
+
+.image:nth-child(3n + 3) {
+  flex: 2;
+  border-right: none;
+}
+
+.image:last-child {
+  margin-right: 0;
+}
+
+.canvas-container {
+  position: relative;
+  margin: 0 auto;
+}
+
+.canvas-container canvas {
+  margin: 0;
+}
+
+#imageContainer {
+  width: 100%;
+  margin-bottom: 10px;
+  display: flex;
+  text-align: center;
+}
+
+.main-image {
+  margin-bottom: 10px;
+  position: relative;
+}
+
+#buttonContainer {
+  width: 100%;
+  clear: both;
+  margin-top: 60px;
+  text-align: center;
+}
+
+.snapshot-container {
+  text-align: left;
+  min-height: 200px;
+  padding: 0 20px;
+}
+
+.snapshot-container canvas {
+  opacity: 0.1;
+  transition-duration: 1s;
+  margin-bottom: 10px;
+}
+
+.snapshot-container canvas.show {
+  opacity: 1;
+}
+
+.frame {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: white;
+  opacity: 0.2;
+  border: 2px solid black;
+  transition-duration: 1s;
+}
+
+.frame.snap {
+  opacity: 1;
+}
+
+.frame.twohundred {
+  transition-duration: 0.2s;
+}
+.frame.one {
+  transition-duration: 1s;
+}
+
+.frame.no-snap {
+  opacity: 0.2;
+}
+
+#chooser {
+  border-top: 1px solid #CCC;
+  padding-top: 40px;
+  margin-top: 40px;
+}
+
+</style>
+  </head>
+<body>
+  <div id="root"></div>
+  <div id="chooser">
+    <button id="simple">One</button>
+    <button id="simple-remainder">Reaminder</button>
+    <button id="filter">Filter</button>
+    <button id="filter-remainder">Filter with Reaminder</button>
+  </div>
+  <script src="./index.js"></script>
+</body>
+</html>
+

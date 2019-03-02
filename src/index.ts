@@ -131,6 +131,7 @@ class ImageLabeler {
       const shape: number[] = model.inputs[0].shape;
       const dims: [number, number] = [shape[1], shape[2]];
       const parsedImages: tf.Tensor4D = await parseImages(images, dims, options.filters);
+      console.log('these also need to be normalized and resized');
       results = await predict(parsedImages, model, options.modelSettings.labels);
       results = results.slice(0, options.numberOfLabels);
     } catch(_err) {

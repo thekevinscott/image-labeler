@@ -7,7 +7,7 @@ import {
 const getPreds = async (images: tf.Tensor4D, model: tf.Model): Promise<tf.Tensor> => {
   const labels: tf.Tensor|tf.Tensor[] = await model.predict(images);
   if (Array.isArray(labels)) {
-    throw new Error('handle this');
+    throw new Error('I think we need to flatten this');
     return labels[0];
   }
   return labels;

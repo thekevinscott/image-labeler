@@ -73,7 +73,6 @@ const filterImage = (img: tf.Tensor4D, filters: IFilters) => tf.tidy(() => {
     slices.forEach(slice => {
       const start = [0, ...slice, 0];
       const end = [1, ...size, 3];
-      // console.log(start, end, img.shape.slice(1, 3));
       if (t) {
         t = t.concat(img.slice(start, end));
       } else {
