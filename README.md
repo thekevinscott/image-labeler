@@ -112,15 +112,15 @@ A third option is to use a proxy server for routing, such as [CORS Anywhere](htt
 
 Incoming images are divided into pieces, based on the size of the Neural Network's input layer. Let's say you're leveraging the default MobileNet Neural Network. The pieces will be:
 
-![Demonstration of 1 Filter on 3 differently sized images](some.gif)
+![Demonstration of 1 Filter on 3 differently sized images](simple.gif)
 
 `image-labeler` will calculate the minimum size and slide a filter over the entirety of a non-square image until all of the image is processed. Any remainder of an image is merged with what comes before to construct a full image:
 
-![Demonstration of 1 Filter on 2 differently sized images with remainders](remainders.gif)
+![Demonstration of 1 Filter on 2 differently sized images with remainders](remainder.gif)
 
 You can change the filter size. Here we specify a 50% filter size:
 
-![Demonstration of 1 Filter on 3 differently sized images with 50% filter](50percent.gif)
+![Demonstration of 1 Filter on 3 differently sized images with 50% filter](filter.gif)
 
 Using filters increases the amount of granularity we can apply to an image, and avoids the loss of any information due to cropping. Labels are returned by confidence in prediction.
 
@@ -128,7 +128,7 @@ You specify filters by passing an array of floats in the form of `[1, 0.5, 0.25]
 
 Filters that don't cleanly add up to 100% are treated like remainders, above. Here is an example of a filter of `[0.4]`:
 
-![Demonstration of 1 Filter on 3 differently sized images with 40% filter](40percent.gif)
+![Demonstration of 1 Filter on 3 differently sized images with 40% filter](filter-remainder.gif)
 
 ## API
 

@@ -16,7 +16,7 @@ body, html {
 }
 
 body {
-  padding: 10px;
+  padding: 10px 0;
 }
 
 code {
@@ -25,6 +25,23 @@ code {
 
 canvas {
   margin-right: 10px;
+}
+
+.image:nth-child(3n + 2) {
+  min-width: 205px;
+  max-width: 205px;
+}
+
+.image:nth-child(3n + 2) canvas {
+  margin-right: 10px;
+}
+
+.image:nth-child(3n + 2) canvas:nth-child(3n + 0) {
+  margin-right: 0px;
+}
+
+canvas:nth-child(5n + 0) {
+  margin-right: 0px;
 }
 
 .image {
@@ -88,6 +105,10 @@ canvas {
   margin-bottom: 10px;
 }
 
+.snapshot-container canvas:last-child {
+  margin-right: 0;
+}
+
 .snapshot-container canvas.show {
   opacity: 1;
 }
@@ -130,10 +151,10 @@ canvas {
 <body>
   <div id="root"></div>
   <div id="chooser">
-    <button id="simple">One</button>
-    <button id="simple-remainder">Reaminder</button>
+    <button id="simple">Simple</button>
+    <button id="simple-remainder">Remainder</button>
     <button id="filter">Filter</button>
-    <button id="filter-remainder">Filter with Reaminder</button>
+    <button id="filter-remainder">Filter with Remainder</button>
   </div>
   <script src="./index.js"></script>
 </body>

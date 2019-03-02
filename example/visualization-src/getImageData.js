@@ -1,6 +1,26 @@
+/* globals Promise */
 import * as tf from '@tensorflow/tfjs';
 
-const getImageData = (width, height) => {
+const getLocalPhoto = url => loadImage(url);
+
+const loadImage = src => new Promise((resolve, reject) => {
+  const img = new Image();
+  img.src = src;
+
+  img.onload = () => {
+    const pixels = tf.browser.fromPixels(img).expandDims(0);
+    resolve(pixels);
+  };
+
+  img.onerror = (err) => {
+    console.log(src);
+    reject(err);
+  };
+});
+
+const getStockPhoto = (width, height) => loadImage(`https://picsum.photos/${width}/${height}/?random`);
+
+const getCanvasData = async (width, height) => {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -14,4 +34,4 @@ const getImageData = (width, height) => {
   return tf.fromPixels(canvas).expandDims(0);
 };
 
-export default getImageData;
+export default getLocalPhoto;

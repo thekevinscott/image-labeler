@@ -34,7 +34,7 @@ const makeCanvas = (tensor) => {
   return canvas;
 };
 
-async function drawImages(images, filters = [1]) {
+async function drawImages(images, filters = [1], getOffside) {
   const imageContainer = document.getElementById('imageContainer');
   imageContainer.innerHTML = '';
 
@@ -77,12 +77,16 @@ async function drawImages(images, filters = [1]) {
         setTimeout(() => {
           canvas.className = 'show';
         });
-      });
+      }, (getOffside || defaultGetOffside)(i));
     }
   }
 }
 
-const makeFrame = (target, image, filter, parsedImages, callback) => {
+const defaultGetOffside = imageIndex => (index, parsedImages, filter) => {
+  return Math.floor((index + 1) / (parsedImages.shape[0] * filter));
+};
+
+const makeFrame = (target, image, filter, parsedImages, callback, getOffsideForIndex) => {
   const frame = document.createElement('div');
   frame.className = 'frame';
   const maxIndex = image.shape[1] < image.shape[2] ? 1 : 2;
@@ -104,10 +108,14 @@ const makeFrame = (target, image, filter, parsedImages, callback) => {
     }, start + 200);
     setTimeout(() => {
       frame.className = 'frame no-snap';
-      const offside = Math.floor((j + 1) / (parsedImages.shape[0] * filter));
+      const offside = getOffsideForIndex(j, parsedImages, filter);
       const minIndex = maxIndex === 2 ? 1 : 2;
       let targetMax = size * offside;
-      let targetMin = size * (j + 1) - (offside * image.shape[minIndex]);
+      let remainder = 0;
+      if (image.shape[minIndex] % size !== 0) {
+        remainder = size - (image.shape[minIndex] % size);
+      }
+      let targetMin = size * (j + 1) - (offside * image.shape[minIndex]) - (offside * remainder);
       if (j !== parsedImages.shape[0] - 1) {
         if (targetMin + size > image.shape[minIndex]) {
           targetMin = image.shape[minIndex] - size;

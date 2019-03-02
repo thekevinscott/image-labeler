@@ -7,7 +7,7 @@
     "@tensorflow/tfjs-vis": "^0.4.2"
   },
   "scripts": {
-    "visualization": "parcel visualization-src/index.html --no-hmr --no-cache --no-source-maps --no-autoinstall",
+    "visualization": "parcel visualization-src/index.html --no-cache --no-source-maps --no-autoinstall",
     "develop_with_reload": "parcel src/index.html --no-cache --no-source-maps --no-autoinstall",
     "develop": "parcel src/index.html --no-hmr --no-cache --no-source-maps --no-autoinstall"
   },
