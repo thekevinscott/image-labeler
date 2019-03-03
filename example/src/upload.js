@@ -23,7 +23,6 @@ class Upload extends React.Component {
     }
 
     reader.readAsDataURL(acceptedFiles[0]);
-    // Do something with files
   }
 
   render() {
