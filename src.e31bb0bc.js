@@ -28163,7 +28163,7 @@ function (_React$Component) {
         _this.props.onUpload(e.target.result);
       };
 
-      reader.readAsDataURL(acceptedFiles[0]); // Do something with files
+      reader.readAsDataURL(acceptedFiles[0]);
     });
 
     _this.state = {
