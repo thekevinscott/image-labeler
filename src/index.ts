@@ -6,7 +6,7 @@ import {
   DEFAULT_MODEL_SETTINGS,
 } from './config';
 import parseImages from './parseImages';
-// import normalizeImages from './normalizeImages';
+import normalizeImage from './normalizeImage';
 import predict from './predict';
 import {
   IOptions,
@@ -70,7 +70,15 @@ class ImageLabeler {
     this.configure(options);
   }
 
-  configure = async (options: IOptions = {}) => {
+  configure = (options: IOptions = {}) => {
+    const unsupportedKeys = Object.keys(options).filter(key => {
+      return !Object.keys(this.options).includes(key);
+    });
+
+    if (unsupportedKeys.length > 0) {
+      throw new Error(`Unsupported keys: ${unsupportedKeys.join(', ')}`);
+    }
+
     if (options.modelSettings !== undefined) {
       this.model = undefined;
       if (!options.modelSettings.url || !options.modelSettings.labels) {
@@ -131,7 +139,9 @@ class ImageLabeler {
       const model = await this.getModel();
       const shape: number[] = model.inputs[0].shape;
       const dims: [number, number] = [shape[1], shape[2]];
-      const parsedImages: tf.Tensor4D = await parseImages(images, dims, options.filters);
+      const parsedImages: tf.Tensor4D = await parseImages(images, dims, options.filters, slicedImage => {
+        return normalizeImage(slicedImage, dims);
+      });
       if (parsedImages.shape[0] === null) {
         throw new Error('Something went wrong when parsing the images');
       }

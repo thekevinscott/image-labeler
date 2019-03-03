@@ -60,14 +60,15 @@ const getImage = async (image: IImage, dims: [number, number]): Promise<tf.Tenso
   return pixels.resizeBilinear(dims).expandDims(0);
 };
 
-const parseImages = async (images: IImage|Array<IImage>, dims: [number, number], filters: IFilters): Promise<tf.Tensor4D> => {
+const parseImages = async (images: IImage|Array<IImage>, dims: [number, number], filters: IFilters, processImage?: (img: tf.Tensor4D) => tf.Tensor4D): Promise<tf.Tensor4D> => {
   const preparedImages = getArrayOfImages(images)
 
   let tensor;
   for (let i = 0; i < preparedImages.length; i++) {
     try {
-      const img = await getImage(preparedImages[i], dims);
-      const filteredImg = filterImage(img, dims, filters);
+      const preparedImage = preparedImages[i];
+      const img = await getImage(preparedImage, dims);
+      const filteredImg = filterImage(img, filters, processImage);
       if (tensor === undefined) {
         tensor = filteredImg;
       } else {
