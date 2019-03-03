@@ -14,7 +14,8 @@
     "visualization": "parcel visualization-src/index.html --no-cache --no-source-maps --no-autoinstall",
     "develop_with_reload": "parcel src/index.html --no-cache --no-source-maps --no-autoinstall",
     "develop": "parcel src/index.html --no-hmr --no-cache --no-source-maps --no-autoinstall",
-    "example-deploy": "gh-pages -d dist"
+    "build": "parcel build src/index.html",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "@babel/core": "^7.3.4",
