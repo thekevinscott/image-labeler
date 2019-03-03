@@ -35286,305 +35286,7 @@ exports.sha256 = require('./sha256')
 exports.sha384 = require('./sha384')
 exports.sha512 = require('./sha512')
 
-},{"./sha":"../node_modules/sha.js/sha.js","./sha1":"../node_modules/sha.js/sha1.js","./sha224":"../node_modules/sha.js/sha224.js","./sha256":"../node_modules/sha.js/sha256.js","./sha384":"../node_modules/sha.js/sha384.js","./sha512":"../node_modules/sha.js/sha512.js"}],"../node_modules/string_decoder/lib/string_decoder.js":[function(require,module,exports) {
-
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-'use strict';
-
-/*<replacement>*/
-
-var Buffer = require('safe-buffer').Buffer;
-/*</replacement>*/
-
-var isEncoding = Buffer.isEncoding || function (encoding) {
-  encoding = '' + encoding;
-  switch (encoding && encoding.toLowerCase()) {
-    case 'hex':case 'utf8':case 'utf-8':case 'ascii':case 'binary':case 'base64':case 'ucs2':case 'ucs-2':case 'utf16le':case 'utf-16le':case 'raw':
-      return true;
-    default:
-      return false;
-  }
-};
-
-function _normalizeEncoding(enc) {
-  if (!enc) return 'utf8';
-  var retried;
-  while (true) {
-    switch (enc) {
-      case 'utf8':
-      case 'utf-8':
-        return 'utf8';
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return 'utf16le';
-      case 'latin1':
-      case 'binary':
-        return 'latin1';
-      case 'base64':
-      case 'ascii':
-      case 'hex':
-        return enc;
-      default:
-        if (retried) return; // undefined
-        enc = ('' + enc).toLowerCase();
-        retried = true;
-    }
-  }
-};
-
-// Do not cache `Buffer.isEncoding` when checking encoding names as some
-// modules monkey-patch it to support additional encodings
-function normalizeEncoding(enc) {
-  var nenc = _normalizeEncoding(enc);
-  if (typeof nenc !== 'string' && (Buffer.isEncoding === isEncoding || !isEncoding(enc))) throw new Error('Unknown encoding: ' + enc);
-  return nenc || enc;
-}
-
-// StringDecoder provides an interface for efficiently splitting a series of
-// buffers into a series of JS strings without breaking apart multi-byte
-// characters.
-exports.StringDecoder = StringDecoder;
-function StringDecoder(encoding) {
-  this.encoding = normalizeEncoding(encoding);
-  var nb;
-  switch (this.encoding) {
-    case 'utf16le':
-      this.text = utf16Text;
-      this.end = utf16End;
-      nb = 4;
-      break;
-    case 'utf8':
-      this.fillLast = utf8FillLast;
-      nb = 4;
-      break;
-    case 'base64':
-      this.text = base64Text;
-      this.end = base64End;
-      nb = 3;
-      break;
-    default:
-      this.write = simpleWrite;
-      this.end = simpleEnd;
-      return;
-  }
-  this.lastNeed = 0;
-  this.lastTotal = 0;
-  this.lastChar = Buffer.allocUnsafe(nb);
-}
-
-StringDecoder.prototype.write = function (buf) {
-  if (buf.length === 0) return '';
-  var r;
-  var i;
-  if (this.lastNeed) {
-    r = this.fillLast(buf);
-    if (r === undefined) return '';
-    i = this.lastNeed;
-    this.lastNeed = 0;
-  } else {
-    i = 0;
-  }
-  if (i < buf.length) return r ? r + this.text(buf, i) : this.text(buf, i);
-  return r || '';
-};
-
-StringDecoder.prototype.end = utf8End;
-
-// Returns only complete characters in a Buffer
-StringDecoder.prototype.text = utf8Text;
-
-// Attempts to complete a partial non-UTF-8 character using bytes from a Buffer
-StringDecoder.prototype.fillLast = function (buf) {
-  if (this.lastNeed <= buf.length) {
-    buf.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, this.lastNeed);
-    return this.lastChar.toString(this.encoding, 0, this.lastTotal);
-  }
-  buf.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, buf.length);
-  this.lastNeed -= buf.length;
-};
-
-// Checks the type of a UTF-8 byte, whether it's ASCII, a leading byte, or a
-// continuation byte. If an invalid byte is detected, -2 is returned.
-function utf8CheckByte(byte) {
-  if (byte <= 0x7F) return 0;else if (byte >> 5 === 0x06) return 2;else if (byte >> 4 === 0x0E) return 3;else if (byte >> 3 === 0x1E) return 4;
-  return byte >> 6 === 0x02 ? -1 : -2;
-}
-
-// Checks at most 3 bytes at the end of a Buffer in order to detect an
-// incomplete multi-byte UTF-8 character. The total number of bytes (2, 3, or 4)
-// needed to complete the UTF-8 character (if applicable) are returned.
-function utf8CheckIncomplete(self, buf, i) {
-  var j = buf.length - 1;
-  if (j < i) return 0;
-  var nb = utf8CheckByte(buf[j]);
-  if (nb >= 0) {
-    if (nb > 0) self.lastNeed = nb - 1;
-    return nb;
-  }
-  if (--j < i || nb === -2) return 0;
-  nb = utf8CheckByte(buf[j]);
-  if (nb >= 0) {
-    if (nb > 0) self.lastNeed = nb - 2;
-    return nb;
-  }
-  if (--j < i || nb === -2) return 0;
-  nb = utf8CheckByte(buf[j]);
-  if (nb >= 0) {
-    if (nb > 0) {
-      if (nb === 2) nb = 0;else self.lastNeed = nb - 3;
-    }
-    return nb;
-  }
-  return 0;
-}
-
-// Validates as many continuation bytes for a multi-byte UTF-8 character as
-// needed or are available. If we see a non-continuation byte where we expect
-// one, we "replace" the validated continuation bytes we've seen so far with
-// a single UTF-8 replacement character ('\ufffd'), to match v8's UTF-8 decoding
-// behavior. The continuation byte check is included three times in the case
-// where all of the continuation bytes for a character exist in the same buffer.
-// It is also done this way as a slight performance increase instead of using a
-// loop.
-function utf8CheckExtraBytes(self, buf, p) {
-  if ((buf[0] & 0xC0) !== 0x80) {
-    self.lastNeed = 0;
-    return '\ufffd';
-  }
-  if (self.lastNeed > 1 && buf.length > 1) {
-    if ((buf[1] & 0xC0) !== 0x80) {
-      self.lastNeed = 1;
-      return '\ufffd';
-    }
-    if (self.lastNeed > 2 && buf.length > 2) {
-      if ((buf[2] & 0xC0) !== 0x80) {
-        self.lastNeed = 2;
-        return '\ufffd';
-      }
-    }
-  }
-}
-
-// Attempts to complete a multi-byte UTF-8 character using bytes from a Buffer.
-function utf8FillLast(buf) {
-  var p = this.lastTotal - this.lastNeed;
-  var r = utf8CheckExtraBytes(this, buf, p);
-  if (r !== undefined) return r;
-  if (this.lastNeed <= buf.length) {
-    buf.copy(this.lastChar, p, 0, this.lastNeed);
-    return this.lastChar.toString(this.encoding, 0, this.lastTotal);
-  }
-  buf.copy(this.lastChar, p, 0, buf.length);
-  this.lastNeed -= buf.length;
-}
-
-// Returns all complete UTF-8 characters in a Buffer. If the Buffer ended on a
-// partial character, the character's bytes are buffered until the required
-// number of bytes are available.
-function utf8Text(buf, i) {
-  var total = utf8CheckIncomplete(this, buf, i);
-  if (!this.lastNeed) return buf.toString('utf8', i);
-  this.lastTotal = total;
-  var end = buf.length - (total - this.lastNeed);
-  buf.copy(this.lastChar, 0, end);
-  return buf.toString('utf8', i, end);
-}
-
-// For UTF-8, a replacement character is added when ending on a partial
-// character.
-function utf8End(buf) {
-  var r = buf && buf.length ? this.write(buf) : '';
-  if (this.lastNeed) return r + '\ufffd';
-  return r;
-}
-
-// UTF-16LE typically needs two bytes per character, but even if we have an even
-// number of bytes available, we need to check if we end on a leading/high
-// surrogate. In that case, we need to wait for the next two bytes in order to
-// decode the last character properly.
-function utf16Text(buf, i) {
-  if ((buf.length - i) % 2 === 0) {
-    var r = buf.toString('utf16le', i);
-    if (r) {
-      var c = r.charCodeAt(r.length - 1);
-      if (c >= 0xD800 && c <= 0xDBFF) {
-        this.lastNeed = 2;
-        this.lastTotal = 4;
-        this.lastChar[0] = buf[buf.length - 2];
-        this.lastChar[1] = buf[buf.length - 1];
-        return r.slice(0, -1);
-      }
-    }
-    return r;
-  }
-  this.lastNeed = 1;
-  this.lastTotal = 2;
-  this.lastChar[0] = buf[buf.length - 1];
-  return buf.toString('utf16le', i, buf.length - 1);
-}
-
-// For UTF-16LE we do not explicitly append special replacement characters if we
-// end on a partial character, we simply let v8 handle that.
-function utf16End(buf) {
-  var r = buf && buf.length ? this.write(buf) : '';
-  if (this.lastNeed) {
-    var end = this.lastTotal - this.lastNeed;
-    return r + this.lastChar.toString('utf16le', 0, end);
-  }
-  return r;
-}
-
-function base64Text(buf, i) {
-  var n = (buf.length - i) % 3;
-  if (n === 0) return buf.toString('base64', i);
-  this.lastNeed = 3 - n;
-  this.lastTotal = 3;
-  if (n === 1) {
-    this.lastChar[0] = buf[buf.length - 1];
-  } else {
-    this.lastChar[0] = buf[buf.length - 2];
-    this.lastChar[1] = buf[buf.length - 1];
-  }
-  return buf.toString('base64', i, buf.length - n);
-}
-
-function base64End(buf) {
-  var r = buf && buf.length ? this.write(buf) : '';
-  if (this.lastNeed) return r + this.lastChar.toString('base64', 0, 3 - this.lastNeed);
-  return r;
-}
-
-// Pass bytes on through for single-byte encodings (e.g. ascii, latin1, hex)
-function simpleWrite(buf) {
-  return buf.toString(this.encoding);
-}
-
-function simpleEnd(buf) {
-  return buf && buf.length ? this.write(buf) : '';
-}
-},{"safe-buffer":"../node_modules/safe-buffer/index.js"}],"../node_modules/cipher-base/index.js":[function(require,module,exports) {
+},{"./sha":"../node_modules/sha.js/sha.js","./sha1":"../node_modules/sha.js/sha1.js","./sha224":"../node_modules/sha.js/sha224.js","./sha256":"../node_modules/sha.js/sha256.js","./sha384":"../node_modules/sha.js/sha384.js","./sha512":"../node_modules/sha.js/sha512.js"}],"../node_modules/cipher-base/index.js":[function(require,module,exports) {
 
 var Buffer = require('safe-buffer').Buffer
 var Transform = require('stream').Transform
@@ -35686,7 +35388,7 @@ CipherBase.prototype._toString = function (value, enc, fin) {
 
 module.exports = CipherBase
 
-},{"safe-buffer":"../node_modules/safe-buffer/index.js","stream":"../node_modules/stream-browserify/index.js","string_decoder":"../node_modules/string_decoder/lib/string_decoder.js","inherits":"../node_modules/inherits/inherits_browser.js"}],"../node_modules/create-hash/browser.js":[function(require,module,exports) {
+},{"safe-buffer":"../node_modules/safe-buffer/index.js","stream":"../node_modules/stream-browserify/index.js","string_decoder":"../node_modules/readable-stream/node_modules/string_decoder/lib/string_decoder.js","inherits":"../node_modules/inherits/inherits_browser.js"}],"../node_modules/create-hash/browser.js":[function(require,module,exports) {
 'use strict'
 var inherits = require('inherits')
 var MD5 = require('md5.js')
@@ -51355,7 +51057,7 @@ function createNestedArray(e, t, n) {
 }
 
 function toNestedArray(e, t) {
-  if (0 === e.length) return [];
+  if (0 === e.length) return t[0];
   var n = e.reduce(function (e, t) {
     return e * t;
   });
@@ -51767,8 +51469,8 @@ var Tensor = function () {
     return void 0 === t && (t = 0), this.throwIfDisposed(), opHandler.split(this, e, t);
   }, e.prototype.stack = function (e, t) {
     return void 0 === t && (t = 0), opHandler.stack([this, e], t);
-  }, e.prototype.unstack = function (e, t) {
-    return void 0 === t && (t = 0), opHandler.unstack(this, t);
+  }, e.prototype.unstack = function (e) {
+    return void 0 === e && (e = 0), opHandler.unstack(this, e);
   }, e.prototype.pad = function (e, t) {
     return void 0 === t && (t = 0), opHandler.pad(this, e, t);
   }, e.prototype.batchNormalization = function (e, t, n, r, o) {
@@ -57817,22 +57519,23 @@ var CPU_HANDOFF_SIZE_THRESHOLD = 10,
         dataId: e,
         shape: i,
         dtype: r
-      }]);
-      return this.readSync(u.dataId);
+      }]),
+          l = this.readSync(u.dataId);
+      return u.dispose(), l;
     }
 
     if (null != n) return this.convertAndCacheOnCPU(e);
     if ("string" === r) return n;
-    var l,
-        c,
-        p = null != this.activeTimers;
-    (p && (l = performance.now()), "complex64" === r) ? c = mergeRealAndImagArrays(o.real.dataSync(), o.imag.dataSync()) : c = this.getValuesFromTexture(e);
-    return p && (this.downloadWaitMs += performance.now() - l), this.convertAndCacheOnCPU(e, c);
+    var c,
+        p,
+        d = null != this.activeTimers;
+    (d && (c = performance.now()), "complex64" === r) ? p = mergeRealAndImagArrays(o.real.dataSync(), o.imag.dataSync()) : p = this.getValuesFromTexture(e);
+    return d && (this.downloadWaitMs += performance.now() - c), this.convertAndCacheOnCPU(e, p);
   }, e.prototype.read = function (e) {
     return __awaiter(this, void 0, void 0, function () {
-      var t, n, r, o, a, i, s, u, l, c, p, d, h, f, m, g, v, y, x, T, w, E, b;
-      return __generator(this, function (S) {
-        switch (S.label) {
+      var t, n, r, o, a, i, s, u, l, c, p, d, h, f, m, g, v, y, x, T, w, E, b, S;
+      return __generator(this, function (C) {
+        switch (C.label) {
           case 0:
             if (this.pendingRead.has(e)) return r = this.pendingRead.get(e), [2, new Promise(function (e) {
               return r.push(e);
@@ -57841,15 +57544,15 @@ var CPU_HANDOFF_SIZE_THRESHOLD = 10,
               dataId: e,
               shape: l,
               dtype: p
-            }]), [2, this.read(h.dataId)];
+            }]), f = this.read(h.dataId), h.dispose(), [2, f];
             if (null != i) return [2, this.convertAndCacheOnCPU(e)];
             if (this.pendingRead.set(e, []), !ENV.get("WEBGL_DOWNLOAD_FLOAT_ENABLED") && 2 === ENV.get("WEBGL_VERSION")) throw new Error("tensor.data() with WEBGL_DOWNLOAD_FLOAT_ENABLED=false and WEBGL_VERSION=2 not yet supported.");
-            return f = s[1], m = s[0], u && (t = getPackedMatrixTextureShapeWidthHeight(s[0], s[1]), f = t[0], m = t[1]), g = this.gpgpu.maybeCreateBufferFromTexture(a, m, f), [4, this.gpgpu.createAndWaitForFence()];
+            return m = s[1], g = s[0], u && (t = getPackedMatrixTextureShapeWidthHeight(s[0], s[1]), m = t[0], g = t[1]), v = this.gpgpu.maybeCreateBufferFromTexture(a, g, m), [4, this.gpgpu.createAndWaitForFence()];
 
           case 1:
-            return S.sent(), g instanceof WebGLTexture ? v = this.getValuesFromTexture(e) : (y = sizeFromShape(l), u ? (x = getBatchDim(l), T = 1, w = 1, l.length && (n = getRowsCols(l), T = n[0], w = n[1]), v = this.gpgpu.downloadPackedMatrixFromBuffer(g, x, T, w, s[0], s[1]).subarray(0, y)) : v = this.gpgpu.downloadFloat32MatrixFromBuffer(g, s[0], s[1]).subarray(0, y)), E = this.convertAndCacheOnCPU(e, v), b = this.pendingRead.get(e), this.pendingRead.delete(e), b.forEach(function (e) {
-              return e(E);
-            }), this.pendingDisposal.has(e) && (this.pendingDisposal.delete(e), this.disposeData(e)), [2, E];
+            return C.sent(), v instanceof WebGLTexture ? y = this.getValuesFromTexture(e) : (x = sizeFromShape(l), u ? (T = getBatchDim(l), w = 1, E = 1, l.length && (n = getRowsCols(l), w = n[0], E = n[1]), y = this.gpgpu.downloadPackedMatrixFromBuffer(v, T, w, E, s[0], s[1]).subarray(0, x)) : y = this.gpgpu.downloadFloat32MatrixFromBuffer(v, s[0], s[1]).subarray(0, x)), b = this.convertAndCacheOnCPU(e, y), S = this.pendingRead.get(e), this.pendingRead.delete(e), S.forEach(function (e) {
+              return e(b);
+            }), this.pendingDisposal.has(e) && (this.pendingDisposal.delete(e), this.disposeData(e)), [2, b];
         }
       });
     });
@@ -57994,9 +57697,9 @@ var CPU_HANDOFF_SIZE_THRESHOLD = 10,
     return this.uploadToGPU(e.dataId), this.shallowSlice(e, t, n);
   }, e.prototype.shallowSlice = function (e, t, n) {
     var r = this.texData.get(e.dataId),
-        o = Tensor.make(n, {}, r.dtype),
+        o = Tensor.make(n, {}, e.dtype),
         a = this.texData.get(o.dataId);
-    Object.assign(a, r), a.shape = n;
+    Object.assign(a, r), a.shape = n, a.dtype = e.dtype;
     var i = computeFlatOffset(t, e.strides);
     r.slice && (i += r.slice.flatOffset), a.slice = {
       flatOffset: i,
@@ -58784,7 +58487,7 @@ var CPU_HANDOFF_SIZE_THRESHOLD = 10,
     return tidy(function () {
       var t = ENV.get("DEBUG");
       ENV.set("DEBUG", !1);
-      var n = e.abs(scalar(1e-8)).get();
+      var n = e.abs(scalar(1e-8)).dataSync()[0];
       return ENV.set("DEBUG", t), n > 0 ? 32 : 16;
     });
   }, e.prototype.uploadToGPU = function (e) {
@@ -59795,8 +59498,9 @@ function getPadAndOutInfo(e, t, n, r, o, a, i, s) {
     var p = computeOutputShape3D([t, n, 1], a, 1, r, e, s);
     l = p[0], c = p[1];
   } else if ("same" === e) {
-    var d = ((l = Math.ceil(t / r)) - 1) * r + a - t,
-        h = ((c = Math.ceil(n / o)) - 1) * o + i - n,
+    l = Math.ceil(t / r), c = Math.ceil(n / o);
+    var d = Math.max(0, (l - 1) * r + a - t),
+        h = Math.max(0, (c - 1) * o + i - n),
         f = Math.floor(d / 2),
         m = d - f,
         g = Math.floor(h / 2);
@@ -62871,11 +62575,11 @@ var MathBackendCPU = function () {
       return tensor(e.dataSync().subarray(r, r + o), n, e.dtype);
     }
 
-    for (var a = buffer(n, e.dtype), i = 0; i < a.size; ++i) {
-      var s = a.indexToLoc(i).map(function (e, n) {
+    for (var a = buffer(n, e.dtype), i = e.bufferSync(), s = 0; s < a.size; ++s) {
+      var u = a.indexToLoc(s).map(function (e, n) {
         return e + t[n];
       });
-      a.values[i] = e.get.apply(e, s);
+      a.values[s] = i.get.apply(i, u);
     }
 
     return a.toTensor();
@@ -62892,10 +62596,10 @@ var MathBackendCPU = function () {
       return 0 === e;
     })) return tensor([], h);
 
-    for (var f = buffer(p, e.dtype), m = 0; m < f.size; m++) {
-      for (var g = f.indexToLoc(m), v = new Array(g.length), y = 0; y < v.length; y++) v[y] = g[y] * r[y] + c[y];
+    for (var f = buffer(p, e.dtype), m = e.bufferSync(), g = 0; g < f.size; g++) {
+      for (var v = f.indexToLoc(g), y = new Array(v.length), x = 0; x < y.length; x++) y[x] = v[x] * r[x] + c[x];
 
-      f.set.apply(f, [e.get.apply(e, v)].concat(g));
+      f.set.apply(f, [m.get.apply(m, y)].concat(v));
     }
 
     return f.toTensor().reshape(h);
@@ -62913,7 +62617,7 @@ var MathBackendCPU = function () {
   }, e.prototype.reverse = function (e, t) {
     this.assertNotComplex(e, "reverse");
 
-    for (var n = buffer(e.shape, e.dtype), r = e.buffer(), o = function (o) {
+    for (var n = buffer(e.shape, e.dtype), r = e.bufferSync(), o = function (o) {
       var a = n.indexToLoc(o),
           i = a.slice();
       t.forEach(function (t) {
@@ -63612,13 +63316,13 @@ var MathBackendCPU = function () {
   }, e.prototype.conv2dDerFilter = function (e, t, n) {
     this.assertNotComplex([e, t], "conv2dDerFilter");
 
-    for (var r = n.strideHeight, o = n.strideWidth, a = n.filterHeight, i = n.filterWidth, s = buffer(n.filterShape, "float32"), u = n.padInfo.left, l = n.padInfo.top, c = 0; c < a; ++c) for (var p = Math.max(0, Math.ceil((l - c) / r)), d = Math.min(n.outHeight, (n.inHeight + l - c) / r), h = 0; h < i; ++h) for (var f = Math.max(0, Math.ceil((u - h) / o)), m = Math.min(n.outWidth, (n.inWidth + u - h) / o), g = 0; g < n.inChannels; ++g) for (var v = 0; v < n.outChannels; ++v) {
-      for (var y = 0, x = 0; x < n.batchSize; ++x) for (var T = p; T < d; ++T) for (var w = c + T * r - l, E = f; E < m; ++E) {
-        var b = h + E * o - u;
-        y += e.get(x, w, b, g) * t.get(x, T, E, v);
+    for (var r = n.strideHeight, o = n.strideWidth, a = n.filterHeight, i = n.filterWidth, s = buffer(n.filterShape, "float32"), u = n.padInfo.left, l = n.padInfo.top, c = e.bufferSync(), p = t.bufferSync(), d = 0; d < a; ++d) for (var h = Math.max(0, Math.ceil((l - d) / r)), f = Math.min(n.outHeight, (n.inHeight + l - d) / r), m = 0; m < i; ++m) for (var g = Math.max(0, Math.ceil((u - m) / o)), v = Math.min(n.outWidth, (n.inWidth + u - m) / o), y = 0; y < n.inChannels; ++y) for (var x = 0; x < n.outChannels; ++x) {
+      for (var T = 0, w = 0; w < n.batchSize; ++w) for (var E = h; E < f; ++E) for (var b = d + E * r - l, S = g; S < v; ++S) {
+        var C = m + S * o - u;
+        T += c.get(w, b, C, y) * p.get(w, E, S, x);
       }
 
-      s.set(y, c, h, g, v);
+      s.set(T, d, m, y, x);
     }
 
     return s.toTensor();
@@ -63665,13 +63369,13 @@ var MathBackendCPU = function () {
   }, e.prototype.depthwiseConv2DDerFilter = function (e, t, n) {
     this.assertNotComplex([e, t], "depthwiseConv2DDerFilter");
 
-    for (var r = n.strideHeight, o = n.strideWidth, a = n.filterHeight, i = n.filterWidth, s = buffer(n.filterShape, "float32"), u = n.padInfo.left, l = n.padInfo.top, c = n.outChannels / n.inChannels, p = 0; p < a; ++p) for (var d = Math.max(0, Math.ceil((l - p) / r)), h = Math.min(n.outHeight, (n.inHeight + l - p) / r), f = 0; f < i; ++f) for (var m = Math.max(0, Math.ceil((u - f) / o)), g = Math.min(n.outWidth, (n.inWidth + u - f) / o), v = 0; v < n.outChannels; ++v) {
-      for (var y = Math.trunc(v / c), x = v % c, T = 0, w = 0; w < n.batchSize; ++w) for (var E = d; E < h; ++E) for (var b = p + E * r - l, S = m; S < g; ++S) {
-        var C = f + S * o - u;
-        T += e.get(w, b, C, y) * t.get(w, E, S, v);
+    for (var r = n.strideHeight, o = n.strideWidth, a = n.filterHeight, i = n.filterWidth, s = buffer(n.filterShape, "float32"), u = n.padInfo.left, l = n.padInfo.top, c = n.outChannels / n.inChannels, p = e.bufferSync(), d = t.bufferSync(), h = 0; h < a; ++h) for (var f = Math.max(0, Math.ceil((l - h) / r)), m = Math.min(n.outHeight, (n.inHeight + l - h) / r), g = 0; g < i; ++g) for (var v = Math.max(0, Math.ceil((u - g) / o)), y = Math.min(n.outWidth, (n.inWidth + u - g) / o), x = 0; x < n.outChannels; ++x) {
+      for (var T = Math.trunc(x / c), w = x % c, E = 0, b = 0; b < n.batchSize; ++b) for (var S = f; S < m; ++S) for (var C = h + S * r - l, A = v; A < y; ++A) {
+        var N = g + A * o - u;
+        E += p.get(b, C, N, T) * d.get(b, S, A, x);
       }
 
-      s.set(T, p, f, y, x);
+      s.set(E, h, g, T, w);
     }
 
     return s.toTensor();
@@ -63681,7 +63385,7 @@ var MathBackendCPU = function () {
     for (var n = new Array(e.rank), r = 0; r < n.length; r++) n[r] = e.shape[r] * t[r];
 
     var o = buffer(n, e.dtype),
-        a = e.buffer();
+        a = e.bufferSync();
 
     for (r = 0; r < o.values.length; ++r) {
       for (var i = o.indexToLoc(r), s = new Array(e.rank), u = 0; u < s.length; u++) s[u] = i[u] % e.shape[u];
@@ -63699,7 +63403,7 @@ var MathBackendCPU = function () {
         o = t.map(function (e) {
       return e[0];
     }),
-        a = e.buffer(),
+        a = e.bufferSync(),
         i = buffer(r, e.dtype);
     0 !== n && i.values.fill(n);
 
@@ -63708,7 +63412,7 @@ var MathBackendCPU = function () {
           l = u.map(function (e, t) {
         return e + o[t];
       });
-      i.set.apply(i, [e.get.apply(e, u)].concat(l));
+      i.set.apply(i, [a.get.apply(a, u)].concat(l));
     }
 
     return i.toTensor();
@@ -63719,7 +63423,7 @@ var MathBackendCPU = function () {
 
     var o = e.dataSync(),
         a = buffer(n, e.dtype),
-        i = e.buffer();
+        i = e.bufferSync();
 
     for (r = 0; r < e.size; ++r) {
       for (var s = i.indexToLoc(r), u = new Array(s.length), l = 0; l < u.length; l++) u[l] = s[t[l]];
@@ -63735,7 +63439,7 @@ var MathBackendCPU = function () {
         o = t.dataSync();
     r[n] = o.length;
 
-    for (var a = buffer(r, e.dtype), i = e.buffer(), s = 0; s < a.size; ++s) {
+    for (var a = buffer(r, e.dtype), i = e.bufferSync(), s = 0; s < a.size; ++s) {
       var u = a.indexToLoc(s),
           l = u.slice();
       l[n] = o[u[n]];
@@ -63790,19 +63494,20 @@ var MathBackendCPU = function () {
   }, e.prototype.maxPool = function (e, t) {
     return this.pool(e, t, "max");
   }, e.prototype.maxPoolPositions = function (e, t) {
-    for (var n = buffer(t.outShape, "int32"), r = t.strideHeight, o = t.strideWidth, a = t.dilationHeight, i = t.dilationWidth, s = t.effectiveFilterHeight, u = t.effectiveFilterWidth, l = t.padInfo.top, c = t.padInfo.left, p = 0; p < t.batchSize; ++p) for (var d = 0; d < t.inChannels; ++d) for (var h = 0; h < t.outHeight; ++h) {
-      for (var f = h * r - l, m = f; m < 0;) m += a;
+    for (var n = buffer(t.outShape, "int32"), r = t.strideHeight, o = t.strideWidth, a = t.dilationHeight, i = t.dilationWidth, s = t.effectiveFilterHeight, u = t.effectiveFilterWidth, l = t.padInfo.top, c = t.padInfo.left, p = e.bufferSync(), d = 0; d < t.batchSize; ++d) for (var h = 0; h < t.inChannels; ++h) for (var f = 0; f < t.outHeight; ++f) {
+      for (var m = f * r - l, g = m; g < 0;) g += a;
 
-      for (var g = Math.min(t.inHeight, s + f), v = 0; v < t.outWidth; ++v) {
-        for (var y = v * o - c, x = y; x < 0;) x += i;
+      for (var v = Math.min(t.inHeight, s + m), y = 0; y < t.outWidth; ++y) {
+        for (var x = y * o - c, T = x; T < 0;) T += i;
 
-        for (var T = Math.min(t.inWidth, u + y), w = Number.NEGATIVE_INFINITY, E = -1, b = m; b < g; b += a) for (var S = b - f, C = x; C < T; C += i) {
-          var A = C - y,
-              N = e.get(p, b, C, d);
-          N > w && (w = N, E = S * u + A);
+        for (var w = Math.min(t.inWidth, u + x), E = Number.NEGATIVE_INFINITY, b = -1, S = g; S < v; S += a) for (var C = S - m, A = T; A < w; A += i) {
+          var N = A - x,
+              _ = p.get(d, S, A, h);
+
+          _ > E && (E = _, b = C * u + N);
         }
 
-        n.set(E, p, h, v, d);
+        n.set(b, d, f, y, h);
       }
     }
 
@@ -63810,36 +63515,36 @@ var MathBackendCPU = function () {
   }, e.prototype.maxPoolBackprop = function (e, t, n, r) {
     this.assertNotComplex([t, n], "maxPoolBackprop");
 
-    for (var o = this.maxPoolPositions(t, r), a = r.strideHeight, i = r.strideWidth, s = r.dilationHeight, u = r.dilationWidth, l = r.effectiveFilterHeight, c = r.effectiveFilterWidth, p = c - 1 - r.padInfo.left, d = l - 1 - r.padInfo.top, h = buffer(t.shape, "float32"), f = 0; f < r.batchSize; ++f) for (var m = 0; m < r.inChannels; ++m) for (var g = 0; g < r.inHeight; ++g) for (var v = 0; v < r.inWidth; ++v) {
-      for (var y = g - d, x = v - p, T = 0, w = 0; w < l; w += s) {
-        var E = (y + w) / a;
-        if (!(E < 0 || E >= r.outHeight || Math.floor(E) !== E)) for (var b = 0; b < c; b += u) {
-          var S = (x + b) / i;
+    for (var o = this.maxPoolPositions(t, r), a = r.strideHeight, i = r.strideWidth, s = r.dilationHeight, u = r.dilationWidth, l = r.effectiveFilterHeight, c = r.effectiveFilterWidth, p = c - 1 - r.padInfo.left, d = l - 1 - r.padInfo.top, h = buffer(t.shape, "float32"), f = o.bufferSync(), m = e.bufferSync(), g = 0; g < r.batchSize; ++g) for (var v = 0; v < r.inChannels; ++v) for (var y = 0; y < r.inHeight; ++y) for (var x = 0; x < r.inWidth; ++x) {
+      for (var T = y - d, w = x - p, E = 0, b = 0; b < l; b += s) {
+        var S = (T + b) / a;
+        if (!(S < 0 || S >= r.outHeight || Math.floor(S) !== S)) for (var C = 0; C < c; C += u) {
+          var A = (w + C) / i;
 
-          if (!(S < 0 || S >= r.outWidth || Math.floor(S) !== S)) {
-            var C = l * c - 1 - o.get(f, E, S, m) === w * c + b ? 1 : 0;
-            if (0 !== C) T += e.get(f, E, S, m) * C;
+          if (!(A < 0 || A >= r.outWidth || Math.floor(A) !== A)) {
+            var N = l * c - 1 - f.get(g, S, A, v) === b * c + C ? 1 : 0;
+            if (0 !== N) E += m.get(g, S, A, v) * N;
           }
         }
       }
 
-      h.set(T, f, g, v, m);
+      h.set(E, g, y, x, v);
     }
 
     return h.toTensor();
   }, e.prototype.avgPoolBackprop = function (e, t, n) {
     this.assertNotComplex([e, t], "avgPoolBackprop");
 
-    for (var r = n.strideHeight, o = n.strideWidth, a = n.filterHeight, i = n.filterWidth, s = n.dilationHeight, u = n.dilationWidth, l = n.effectiveFilterHeight, c = n.effectiveFilterWidth, p = c - 1 - n.padInfo.left, d = l - 1 - n.padInfo.top, h = buffer(t.shape, "float32"), f = 1 / (a * i), m = 0; m < n.batchSize; ++m) for (var g = 0; g < n.inChannels; ++g) for (var v = 0; v < n.inHeight; ++v) for (var y = 0; y < n.inWidth; ++y) {
-      for (var x = v - d, T = y - p, w = 0, E = 0; E < l; E += s) {
-        var b = (x + E) / r;
-        if (!(b < 0 || b >= n.outHeight || Math.floor(b) !== b)) for (var S = 0; S < c; S += u) {
-          var C = (T + S) / o;
-          if (!(C < 0 || C >= n.outWidth || Math.floor(C) !== C)) w += e.get(m, b, C, g);
+    for (var r = n.strideHeight, o = n.strideWidth, a = n.filterHeight, i = n.filterWidth, s = n.dilationHeight, u = n.dilationWidth, l = n.effectiveFilterHeight, c = n.effectiveFilterWidth, p = c - 1 - n.padInfo.left, d = l - 1 - n.padInfo.top, h = buffer(t.shape, "float32"), f = 1 / (a * i), m = e.bufferSync(), g = 0; g < n.batchSize; ++g) for (var v = 0; v < n.inChannels; ++v) for (var y = 0; y < n.inHeight; ++y) for (var x = 0; x < n.inWidth; ++x) {
+      for (var T = y - d, w = x - p, E = 0, b = 0; b < l; b += s) {
+        var S = (T + b) / r;
+        if (!(S < 0 || S >= n.outHeight || Math.floor(S) !== S)) for (var C = 0; C < c; C += u) {
+          var A = (w + C) / o;
+          if (!(A < 0 || A >= n.outWidth || Math.floor(A) !== A)) E += m.get(g, S, A, v);
         }
       }
 
-      h.set(w * f, m, v, y, g);
+      h.set(E * f, g, y, x, v);
     }
 
     return h.toTensor();
@@ -63977,7 +63682,7 @@ var MathBackendCPU = function () {
     var o = new Float32Array(e.size * t);
     o.fill(r);
 
-    for (var a = 0; a < e.size; ++a) e.get(a) >= 0 && e.get(a) < t && (o[a * t + e.get(a)] = n);
+    for (var a = e.dataSync(), i = 0; i < e.size; ++i) a[i] >= 0 && a[i] < t && (o[i * t + a[i]] = n);
 
     return tensor2d(o, [e.size, t], "int32");
   }, e.prototype.nonMaxSuppression = function (e, t, n, r, o) {
@@ -64053,8 +63758,8 @@ var MathBackendCPU = function () {
         l = getBroadcastDims(t.shape, o),
         c = a.values;
     if (u.length + l.length === 0) for (var p = 0; p < c.length; ++p) c[p] = r(i[p % i.length], s[p % s.length]);else {
-      var d = e.buffer(),
-          h = t.buffer(),
+      var d = e.bufferSync(),
+          h = t.bufferSync(),
           f = function (n) {
         var o = a.indexToLoc(n),
             p = o.slice(-e.rank);
@@ -64089,8 +63794,8 @@ var MathBackendCPU = function () {
           m = n(i[2 * h], i[2 * h + 1], s[2 * f], s[2 * f + 1]);
       c[d] = m.real, p[d] = m.imag;
     } else {
-      var g = this.data.get(e.dataId).complexTensors.real.buffer(),
-          v = this.data.get(t.dataId).complexTensors.real.buffer(),
+      var g = this.data.get(e.dataId).complexTensors.real.bufferSync(),
+          v = this.data.get(t.dataId).complexTensors.real.bufferSync(),
           y = function (r) {
         var a = o.indexToLoc(r),
             d = a.slice(-e.rank);
@@ -65391,7 +65096,7 @@ var serialization = Object.freeze({
 exports.serialization = serialization;
 
 function expectArraysClose(e, t, n) {
-  return null == n && (n = ENV.get("TEST_EPSILON")), expectArraysPredicate(e, t, function (e, t) {
+  return null == n && (n = ENV.get("TEST_EPSILON")), expectArraysPredicate(e, "number" == typeof t || "boolean" == typeof t ? [t] : t, function (e, t) {
     return areClose(e, Number(t), n);
   });
 }
@@ -65427,7 +65132,8 @@ function expectPromiseToFail(e, t) {
 }
 
 function expectArraysEqual(e, t) {
-  return e instanceof Tensor && "string" === e.dtype || t instanceof Tensor && "string" === t.dtype || Array.isArray(e) && isString(e[0]) || Array.isArray(t) && isString(t[0]) ? expectArraysPredicate(e, t, function (e, t) {
+  var n = "string" == typeof t || "number" == typeof t || "boolean" == typeof t ? [t] : t;
+  return e instanceof Tensor && "string" === e.dtype || t instanceof Tensor && "string" === t.dtype || Array.isArray(e) && isString(e[0]) || Array.isArray(t) && isString(t[0]) ? expectArraysPredicate(e, n, function (e, t) {
     return e == t;
   }) : expectArraysClose(e, t, 0);
 }
@@ -65466,7 +65172,7 @@ var test_util = Object.freeze({
   expectValuesInRange: expectValuesInRange,
   expectArrayBuffersEqual: expectArrayBuffersEqual
 }),
-    version = "0.15.2",
+    version = "0.15.4",
     webgl = Object.freeze({
   gpgpu_util: gpgpu_util,
   webgl_util: webgl_util,
@@ -68809,7 +68515,7 @@ function convertTsToPythonic(e, t) {
   return o;
 }
 
-var version = "0.10.2";
+var version = "0.10.3";
 exports.version_layers = version;
 
 function assertFeedCompatibility(e, t) {
@@ -80252,7 +79958,7 @@ var executeOp$6 = function (e, t, a) {
     executeOp$11 = function (e, t, a) {
   switch (e.op) {
     case "batchNormalization":
-      return [(0, _tfjsCore.batchNormalization)(getParamValue("x", e, t, a), getParamValue("mean", e, t, a), getParamValue("variance", e, t, a), getParamValue("epsilon", e, t, a), getParamValue("scale", e, t, a), getParamValue("offset", e, t, a))];
+      return [(0, _tfjsCore.batchNorm)(getParamValue("x", e, t, a), getParamValue("mean", e, t, a), getParamValue("variance", e, t, a), getParamValue("offset", e, t, a), getParamValue("scale", e, t, a), getParamValue("epsilon", e, t, a))];
 
     case "localResponseNormalization":
       return [(0, _tfjsCore.localResponseNormalization)(getParamValue("x", e, t, a), getParamValue("radius", e, t, a), getParamValue("bias", e, t, a), getParamValue("alpha", e, t, a), getParamValue("beta", e, t, a))];
@@ -81314,7 +81020,7 @@ function loadFrozenModel$1(e, t, a) {
   });
 }
 
-var version = "0.8.3";
+var version = "0.8.4";
 exports.version_converter = version;
 
 function loadFrozenModel$2(e, t, a, r) {
@@ -82109,7 +81815,7 @@ var seedrandom$1 = seedrandom,
 
     throw new Error("Unknown data type " + e);
   }, e.toNestedArray = function (t, e) {
-    if (0 === t.length) return [];
+    if (0 === t.length) return e[0];
     var r = t.reduce(function (t, e) {
       return t * e;
     });
@@ -82630,8 +82336,8 @@ var tensor_format_1 = tensor_format.tensorToString,
       return void 0 === e && (e = 0), this.throwIfDisposed(), h.split(this, t, e);
     }, t.prototype.stack = function (t, e) {
       return void 0 === e && (e = 0), h.stack([this, t], e);
-    }, t.prototype.unstack = function (t, e) {
-      return void 0 === e && (e = 0), h.unstack(this, e);
+    }, t.prototype.unstack = function (t) {
+      return void 0 === t && (t = 0), h.unstack(this, t);
     }, t.prototype.pad = function (t, e) {
       return void 0 === e && (e = 0), h.pad(this, t, e);
     }, t.prototype.batchNormalization = function (t, e, r, n, o) {
@@ -83268,7 +82974,7 @@ var ZipMismatchMode,
     return new AsyncMapIterator(this, t).serial();
   }, t.prototype.flatmap = function (t) {
     return new FlatmapIterator(this, t);
-  }, t.prototype.forEach = function (t) {
+  }, t.prototype.forEachAsync = function (t) {
     return __awaiter(this, void 0, void 0, function () {
       return __generator(this, function (e) {
         return [2, this.map(t).resolveFully()];
@@ -83948,7 +83654,7 @@ var ZipIterator = function (t) {
         });
       });
     }, this.size === 1 / 0 ? 1 / 0 : null);
-  }, t.prototype.forEach = function (t) {
+  }, t.prototype.forEachAsync = function (t) {
     return __awaiter(this, void 0, void 0, function () {
       return __generator(this, function (e) {
         switch (e.label) {
@@ -83956,8 +83662,14 @@ var ZipIterator = function (t) {
             return [4, this.iterator()];
 
           case 1:
-            return [2, e.sent().forEach(t)];
+            return [2, e.sent().forEachAsync(t)];
         }
+      });
+    });
+  }, t.prototype.forEach = function (t) {
+    return __awaiter(this, void 0, void 0, function () {
+      return __generator(this, function (e) {
+        return (0, _tfjsCore.deprecationWarn)("dataset.forEach() is deprecated and will be removed. Please use dataset.forEachAsync() instead"), [2, this.forEachAsync(t)];
       });
     });
   }, t.prototype.map = function (t) {
@@ -84666,10 +84378,10 @@ function generator(t) {
   });
 }
 
-var version = "0.2.2"; //# sourceMappingURL=tf-data.esm.js.map
+var version = "0.2.3"; //# sourceMappingURL=tf-data.esm.js.map
 
 exports.version_data = version;
-},{"@tensorflow/tfjs-core":"../../node_modules/@tensorflow/tfjs-core/dist/tf-core.esm.js","crypto":"../node_modules/crypto-browserify/index.js","string_decoder":"../node_modules/string_decoder/lib/string_decoder.js","node-fetch":"../../node_modules/node-fetch/browser.js","fs":"../node_modules/parcel/src/builtins/_empty.js","process":"../node_modules/process/browser.js","buffer":"../node_modules/buffer/index.js"}],"../../node_modules/@tensorflow/tfjs/dist/tf.esm.js":[function(require,module,exports) {
+},{"@tensorflow/tfjs-core":"../../node_modules/@tensorflow/tfjs-core/dist/tf-core.esm.js","crypto":"../node_modules/crypto-browserify/index.js","string_decoder":"../node_modules/readable-stream/node_modules/string_decoder/lib/string_decoder.js","node-fetch":"../../node_modules/node-fetch/browser.js","fs":"../node_modules/parcel/src/builtins/_empty.js","process":"../node_modules/process/browser.js","buffer":"../node_modules/buffer/index.js"}],"../../node_modules/@tensorflow/tfjs/dist/tf.esm.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -84727,7 +84439,7 @@ exports.data = tfjsData;
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 // @tensorflow/tfjs Copyright 2019 Google
-var version = "0.15.2",
+var version = "0.15.3",
     version$1 = {
   "tfjs-core": _tfjsCore.version_core,
   "tfjs-data": tfjsData.version_data,
@@ -84873,10 +84585,12 @@ var t = {
   return a + e > r && (a = r - e), a;
 },
     c = function c(r, o, a) {
-  return e.tidy(function () {
-    var n;
-    return a.forEach(function (a) {
-      var t = function (e, r) {
+  return void 0 === a && (a = function a(e) {
+    return e;
+  }), e.tidy(function () {
+    var e;
+    return o.forEach(function (o) {
+      var n = function (e, r) {
         var o = e[0],
             a = e[1];
         if (!r || r > 1 || r <= 0) throw new Error("Invalid filter provided: " + r);
@@ -84900,19 +84614,17 @@ var t = {
           size: [u, u],
           slices: n
         };
-      }([r.shape[1], r.shape[2]], a),
-          i = t.size;
+      }([r.shape[1], r.shape[2]], o),
+          t = n.size;
 
-      t.slices.forEach(function (a) {
-        var t = [0].concat(a, [0]),
-            l = [1].concat(i, [3]),
-            s = function (r, o) {
-          return e.image.resizeBilinear(r, o).toFloat().div(e.scalar(127)).sub(e.scalar(1));
-        }(r.slice(t, l), o);
-
-        n = n ? n.concat(s) : s;
+      n.slices.forEach(function (o) {
+        var n = [0].concat(o, [0]),
+            i = [1].concat(t, [3]),
+            l = r.slice(n, i),
+            s = a(l);
+        e = e ? e.concat(s) : s;
       });
-    }), n;
+    }), e;
   });
 },
     u = function u(r, o) {
@@ -84949,52 +84661,52 @@ var t = {
 
   var t, i;
 },
-    h = function h(n, t, i) {
+    h = function h(n, t, i, l) {
   try {
-    var _l = function _l() {
-      return s || e.tensor([], [null, null, null, null]);
+    var _s2 = function _s2() {
+      return h || e.tensor([], [null, null, null, null]);
     };
 
-    var s,
-        h = function (e) {
+    var h,
+        d = function (e) {
       return Array.isArray(e) ? e : [e];
     }(n),
-        d = (p = h, m = function m(e) {
+        p = (m = d, b = function b(e) {
       var r = a(function () {
-        return Promise.resolve(u(h[e], t)).then(function (e) {
-          var r = c(e, t, i);
-          if (void 0 === s) s = r;else {
-            var o = s;
-            s = s.concat(r), o.dispose(), r.dispose();
+        return Promise.resolve(u(d[e], t)).then(function (e) {
+          var r = c(e, i, l);
+          if (void 0 === h) h = r;else {
+            var o = h;
+            h = h.concat(r), o.dispose(), r.dispose();
           }
         });
       }, function (e) {
         console.error("There was an error parsing image", e);
       });
       if (r && r.then) return r.then(function () {});
-    }, k = -1, function e(a) {
+    }, w = -1, function e(a) {
       try {
-        for (; ++k < p.length && (!b || !b());) {
-          if ((a = m(k)) && a.then) {
-            if (!((n = a) instanceof r && 1 & n.s)) return void a.then(e, f || (f = o.bind(null, g = new r(), 2)));
+        for (; ++w < m.length && (!g || !g());) {
+          if ((a = b(w)) && a.then) {
+            if (!((n = a) instanceof r && 1 & n.s)) return void a.then(e, k || (k = o.bind(null, f = new r(), 2)));
             a = a.v;
           }
         }
 
-        g ? o(g, 1, a) : g = a;
+        f ? o(f, 1, a) : f = a;
       } catch (e) {
-        o(g || (g = new Pact()), 2, e);
+        o(f || (f = new Pact()), 2, e);
       }
 
       var n;
-    }(), g);
+    }(), f);
 
-    return Promise.resolve(d && d.then ? d.then(_l) : _l());
+    return Promise.resolve(p && p.then ? p.then(_s2) : _s2());
   } catch (e) {
     return Promise.reject(e);
   }
 
-  var p, m, b, g, f, k;
+  var m, b, g, f, k, w;
 },
     d = function d(e) {
   var r = e.dataSync(),
@@ -85052,9 +84764,9 @@ var t = {
 };
 
 module.exports = function (r) {
+  var o = this;
   void 0 === r && (r = {});
-  var o = this,
-      n = this,
+  var n = this,
       l = this,
       s = this;
   this.loadingModel = !1, this.options = {
@@ -85064,13 +84776,12 @@ module.exports = function (r) {
     modelSettings: t
   }, this.callbacks = [], this.configure = function (e) {
     void 0 === e && (e = {});
-
-    try {
-      if (void 0 !== e.modelSettings && (o.model = void 0, !e.modelSettings.url || !e.modelSettings.labels)) throw new Error("Invalid model provided");
-      return o.options = Object.assign({}, o.options, e), void o.getModel();
-    } catch (e) {
-      return Promise.reject(e);
-    }
+    var r = Object.keys(e).filter(function (e) {
+      return !Object.keys(o.options).includes(e);
+    });
+    if (r.length > 0) throw new Error("Unsupported keys: " + r.join(", "));
+    if (void 0 !== e.modelSettings && (o.model = void 0, !e.modelSettings.url || !e.modelSettings.labels)) throw new Error("Invalid model provided");
+    o.options = Object.assign({}, o.options, e), o.getModel();
   }, this.loadModel = function () {
     try {
       if (!0 === n.loadingModel) {
@@ -85100,48 +84811,53 @@ module.exports = function (r) {
     } catch (e) {
       return Promise.reject(e);
     }
-  }, this.label = function (e) {
-    for (var r, o, n = [], t = arguments.length - 1; t-- > 0;) {
-      n[t] = arguments[t + 1];
+  }, this.label = function (r) {
+    for (var o, n, t = [], i = arguments.length - 1; i-- > 0;) {
+      t[i] = arguments[i + 1];
     }
 
     try {
-      var _i = function _i(e) {
-        if (!d) return new Promise(function (e, r) {
-          return c ? r(c) : e(l);
+      var _l = function _l(e) {
+        if (!m) return new Promise(function (e, r) {
+          return u ? r(u) : e(c);
         });
-        d(c, l);
+        m(u, c);
       };
 
-      var l,
-          c,
-          u = (o = s.options, void 0 === (r = n) && (r = []), 2 === r.length ? {
-        callback: r[0],
-        options: Object.assign({}, o, r[1])
-      } : 0 === r.length ? {
-        options: o
-      } : "function" != typeof r[0] ? {
-        options: Object.assign({}, o, r[0])
+      var c,
+          u,
+          d = (n = s.options, void 0 === (o = t) && (o = []), 2 === o.length ? {
+        callback: o[0],
+        options: Object.assign({}, n, o[1])
+      } : 0 === o.length ? {
+        options: n
+      } : "function" != typeof o[0] ? {
+        options: Object.assign({}, n, o[0])
       } : {
-        callback: r[0],
-        options: o
+        callback: o[0],
+        options: n
       }),
-          d = u.callback,
-          m = u.options,
-          b = a(function () {
-        return Promise.resolve(s.getModel()).then(function (r) {
-          var o = r.inputs[0].shape;
-          return Promise.resolve(h(e, [o[1], o[2]], m.filters)).then(function (e) {
+          m = d.callback,
+          b = d.options,
+          g = a(function () {
+        return Promise.resolve(s.getModel()).then(function (o) {
+          var a = o.inputs[0].shape,
+              n = [a[1], a[2]];
+          return Promise.resolve(h(r, n, b.filters, function (r) {
+            return function (r, o) {
+              return e.image.resizeBilinear(r, o).toFloat().div(e.scalar(127)).sub(e.scalar(1));
+            }(r, n);
+          })).then(function (e) {
             if (null === e.shape[0]) throw new Error("Something went wrong when parsing the images");
-            return Promise.resolve(p(e, r, m)).then(function (e) {
-              l = e;
+            return Promise.resolve(p(e, o, b)).then(function (e) {
+              c = e;
             });
           });
         });
       }, function (e) {
-        console.error(e), c = e;
+        console.error(e), u = e;
       });
-      return Promise.resolve(b && b.then ? b.then(_i) : _i());
+      return Promise.resolve(g && g.then ? g.then(_l) : _l());
     } catch (e) {
       return Promise.reject(e);
     }
@@ -85246,173 +84962,4 @@ function (_React$Component) {
 }(_react.default.Component);
 
 _reactDom.default.render(_react.default.createElement(App, null), document.getElementById('root'));
-},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","./upload":"upload.js","./labels":"labels.js","../../dist":"../../dist/index.js"}],"../node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
-var global = arguments[3];
-var OVERLAY_ID = '__parcel__error__overlay__';
-var OldModule = module.bundle.Module;
-
-function Module(moduleName) {
-  OldModule.call(this, moduleName);
-  this.hot = {
-    data: module.bundle.hotData,
-    _acceptCallbacks: [],
-    _disposeCallbacks: [],
-    accept: function (fn) {
-      this._acceptCallbacks.push(fn || function () {});
-    },
-    dispose: function (fn) {
-      this._disposeCallbacks.push(fn);
-    }
-  };
-  module.bundle.hotData = null;
-}
-
-module.bundle.Module = Module;
-var parent = module.bundle.parent;
-
-if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
-  var hostname = "" || location.hostname;
-  var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53244" + '/');
-
-  ws.onmessage = function (event) {
-    var data = JSON.parse(event.data);
-
-    if (data.type === 'update') {
-      console.clear();
-      data.assets.forEach(function (asset) {
-        hmrApply(global.parcelRequire, asset);
-      });
-      data.assets.forEach(function (asset) {
-        if (!asset.isNew) {
-          hmrAccept(global.parcelRequire, asset.id);
-        }
-      });
-    }
-
-    if (data.type === 'reload') {
-      ws.close();
-
-      ws.onclose = function () {
-        location.reload();
-      };
-    }
-
-    if (data.type === 'error-resolved') {
-      console.log('[parcel] ✨ Error resolved');
-      removeErrorOverlay();
-    }
-
-    if (data.type === 'error') {
-      console.error('[parcel] 🚨  ' + data.error.message + '\n' + data.error.stack);
-      removeErrorOverlay();
-      var overlay = createErrorOverlay(data);
-      document.body.appendChild(overlay);
-    }
-  };
-}
-
-function removeErrorOverlay() {
-  var overlay = document.getElementById(OVERLAY_ID);
-
-  if (overlay) {
-    overlay.remove();
-  }
-}
-
-function createErrorOverlay(data) {
-  var overlay = document.createElement('div');
-  overlay.id = OVERLAY_ID; // html encode message and stack trace
-
-  var message = document.createElement('div');
-  var stackTrace = document.createElement('pre');
-  message.innerText = data.error.message;
-  stackTrace.innerText = data.error.stack;
-  overlay.innerHTML = '<div style="background: black; font-size: 16px; color: white; position: fixed; height: 100%; width: 100%; top: 0px; left: 0px; padding: 30px; opacity: 0.85; font-family: Menlo, Consolas, monospace; z-index: 9999;">' + '<span style="background: red; padding: 2px 4px; border-radius: 2px;">ERROR</span>' + '<span style="top: 2px; margin-left: 5px; position: relative;">🚨</span>' + '<div style="font-size: 18px; font-weight: bold; margin-top: 20px;">' + message.innerHTML + '</div>' + '<pre>' + stackTrace.innerHTML + '</pre>' + '</div>';
-  return overlay;
-}
-
-function getParents(bundle, id) {
-  var modules = bundle.modules;
-
-  if (!modules) {
-    return [];
-  }
-
-  var parents = [];
-  var k, d, dep;
-
-  for (k in modules) {
-    for (d in modules[k][1]) {
-      dep = modules[k][1][d];
-
-      if (dep === id || Array.isArray(dep) && dep[dep.length - 1] === id) {
-        parents.push(k);
-      }
-    }
-  }
-
-  if (bundle.parent) {
-    parents = parents.concat(getParents(bundle.parent, id));
-  }
-
-  return parents;
-}
-
-function hmrApply(bundle, asset) {
-  var modules = bundle.modules;
-
-  if (!modules) {
-    return;
-  }
-
-  if (modules[asset.id] || !bundle.parent) {
-    var fn = new Function('require', 'module', 'exports', asset.generated.js);
-    asset.isNew = !modules[asset.id];
-    modules[asset.id] = [fn, asset.deps];
-  } else if (bundle.parent) {
-    hmrApply(bundle.parent, asset);
-  }
-}
-
-function hmrAccept(bundle, id) {
-  var modules = bundle.modules;
-
-  if (!modules) {
-    return;
-  }
-
-  if (!modules[id] && bundle.parent) {
-    return hmrAccept(bundle.parent, id);
-  }
-
-  var cached = bundle.cache[id];
-  bundle.hotData = {};
-
-  if (cached) {
-    cached.hot.data = bundle.hotData;
-  }
-
-  if (cached && cached.hot && cached.hot._disposeCallbacks.length) {
-    cached.hot._disposeCallbacks.forEach(function (cb) {
-      cb(bundle.hotData);
-    });
-  }
-
-  delete bundle.cache[id];
-  bundle(id);
-  cached = bundle.cache[id];
-
-  if (cached && cached.hot && cached.hot._acceptCallbacks.length) {
-    cached.hot._acceptCallbacks.forEach(function (cb) {
-      cb();
-    });
-
-    return true;
-  }
-
-  return getParents(global.parcelRequire, id).some(function (id) {
-    return hmrAccept(global.parcelRequire, id);
-  });
-}
-},{}]},{},["../node_modules/parcel/src/builtins/hmr-runtime.js","index.js"], null)
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","./upload":"upload.js","./labels":"labels.js","../../dist":"../../dist/index.js"}]},{},["index.js"], null)
