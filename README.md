@@ -7,7 +7,9 @@ It was originally developed for the book [Deep Learning With Javascript](https:/
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CircleCI](https://circleci.com/gh/thekevinscott/image-labeler.svg?style=svg)](https://circleci.com/gh/thekevinscott/image-labeler)
 
-A demo is forthcoming.
+![Demonstration](demo.gif)
+
+[View a live demo](https://thekevinscott.github.io/image-labeler/).
 
 ## Table of Contents
 
