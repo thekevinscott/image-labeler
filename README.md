@@ -274,3 +274,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 This package leverages [`tensorflow.js`](https://js.tensorflow.org) and [MobileNet](https://arxiv.org/abs/1704.04861), both released by Google.
 
 This uses labels from [`imagenet-simple-labels`](https://github.com/anishathalye/imagenet-simple-labels) for cleaner labels from ImageNet.
+
+![](https://ga-beacon.appspot.com/UA-112845439-4/image-labeler/readme)
