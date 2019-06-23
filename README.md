@@ -235,14 +235,6 @@ imageClassifier.label('foo', (err, labels) => {
 
 options can include the number of labels to return (0 is all), and how many filters to utilize. also includeConfidence
 
-### Filters
-
-a gif about how filters work
-
-## Tests
-
-<a href="#table-of-contents">Back to Top</a>
-
 ## Versioning
 
 <a href="#table-of-contents">Back to Top</a>
